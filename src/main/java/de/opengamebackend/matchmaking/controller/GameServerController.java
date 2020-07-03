@@ -131,13 +131,13 @@ public class GameServerController {
             return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
         }
 
-        Optional<GameServer> possibleGameServer = gameServerRepository.findById(request.getId());
+        Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getId());
 
-        if (!possibleGameServer.isPresent()) {
+        if (!optionalGameServer.isPresent()) {
             return new ResponseEntity(ERROR_MISSING_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
-        GameServer gameServer = possibleGameServer.get();
+        GameServer gameServer = optionalGameServer.get();
         gameServer.setLastHeartbeat(LocalDateTime.now());
         gameServerRepository.save(gameServer);
 
@@ -163,7 +163,17 @@ public class GameServerController {
             return new ResponseEntity(ERROR_MISSING_VERSION, HttpStatus.BAD_REQUEST);
         }
 
-        Player player = modelMapper.map(request, Player.class);
+        // Check if already exists.
+        Optional<Player> optionalPlayer = playerRepository.findById(request.getPlayerId());
+
+        Player player = null;
+
+        if (optionalPlayer.isPresent()) {
+            player = optionalPlayer.get();
+        } else {
+            player = modelMapper.map(request, Player.class);
+        }
+
         player.setStatus(PlayerStatus.QUEUED);
         playerRepository.save(player);
 
