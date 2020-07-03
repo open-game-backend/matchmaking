@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @RestController
 public class GameServerController {
@@ -77,9 +79,27 @@ public class GameServerController {
             return new ResponseEntity(ERROR_MISSING_VERSION, HttpStatus.BAD_REQUEST);
         }
 
-        GameServer gameServer = modelMapper.map(request, GameServer.class);
-        gameServer.setId(UUID.randomUUID().toString());
+        // Check if already exists.
+        Iterable<GameServer> allServers = gameServerRepository.findAll();
+        Stream<GameServer> allServersStream = StreamSupport.stream(allServers.spliterator(), false);
+
+        GameServer gameServer = allServersStream.filter(s ->
+                s.getIpV4Address().equals(request.getIpV4Address()) &&
+                s.getPort() == request.getPort())
+                .findFirst().orElse(null);
+
+        if (gameServer == null) {
+            gameServer = modelMapper.map(request, GameServer.class);
+            gameServer.setId(UUID.randomUUID().toString());
+        } else {
+            gameServer.setVersion(request.getVersion());
+            gameServer.setGameMode(request.getGameMode());
+            gameServer.setRegion(request.getRegion());
+            gameServer.setMaxPlayers(request.getMaxPlayers());
+        }
+
         gameServer.setLastHeartbeat(LocalDateTime.now());
+
         gameServerRepository.save(gameServer);
 
         RegisterGameServerResponse response = new RegisterGameServerResponse(gameServer.getId());
