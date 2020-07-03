@@ -5,7 +5,6 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
-public interface GameServerRepository extends CrudRepository<GameServer, Long> {
+public interface GameServerRepository extends CrudRepository<GameServer, String> {
     List<GameServer> findAll();
-    GameServer save(GameServer gameServer);
 }
