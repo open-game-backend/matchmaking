@@ -28,8 +28,6 @@ public class GameServerController {
             new ErrorResponse(100, "Missing game mode.");
     private static final ErrorResponse ERROR_MISSING_IPV4_ADDRESS =
             new ErrorResponse(101, "Missing IPv4 address.");
-    private static final ErrorResponse ERROR_MISSING_PORT =
-            new ErrorResponse(102, "Missing port.");
     private static final ErrorResponse ERROR_MISSING_REGION =
             new ErrorResponse(103, "Missing region.");
     private static final ErrorResponse ERROR_MISSING_VERSION =
@@ -68,10 +66,6 @@ public class GameServerController {
 
         if (Strings.isNullOrEmpty(request.getIpV4Address())) {
             return new ResponseEntity(ERROR_MISSING_IPV4_ADDRESS, HttpStatus.BAD_REQUEST);
-        }
-
-        if (Strings.isNullOrEmpty(request.getPort())) {
-            return new ResponseEntity(ERROR_MISSING_PORT, HttpStatus.BAD_REQUEST);
         }
 
         if (Strings.isNullOrEmpty(request.getRegion())) {

@@ -14,7 +14,8 @@ public class GameServer {
     private String gameMode;
     private String region;
     private String ipV4Address;
-    private String port;
+    private int port;
+    private int maxPlayers;
 
     public String getId() {
         return id;
@@ -36,8 +37,12 @@ public class GameServer {
         return ipV4Address;
     }
 
-    public String getPort() {
+    public int getPort() {
         return port;
+    }
+
+    public int getMaxPlayers() {
+        return maxPlayers;
     }
 
     public void setId(String id) {
@@ -60,7 +65,11 @@ public class GameServer {
         this.ipV4Address = ipV4Address;
     }
 
-    public void setPort(String port) {
+    public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setMaxPlayers(int maxPlayers) {
+        this.maxPlayers = maxPlayers;
     }
 }
