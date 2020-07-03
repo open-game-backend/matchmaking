@@ -3,7 +3,9 @@ package de.opengamebackend.matchmaking.controller;
 import com.google.common.base.Strings;
 import de.opengamebackend.matchmaking.model.entities.GameServer;
 import de.opengamebackend.matchmaking.model.repositories.GameServerRepository;
+import de.opengamebackend.matchmaking.model.requests.DeregisterGameServerRequest;
 import de.opengamebackend.matchmaking.model.requests.RegisterGameServerRequest;
+import de.opengamebackend.matchmaking.model.responses.DeregisterGameServerResponse;
 import de.opengamebackend.matchmaking.model.responses.ErrorResponse;
 import de.opengamebackend.matchmaking.model.responses.RegisterGameServerResponse;
 import org.modelmapper.ModelMapper;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -63,6 +66,26 @@ public class GameServerController {
         repository.save(gameServer);
 
         RegisterGameServerResponse response = new RegisterGameServerResponse(gameServer.getId());
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/deregister")
+    public ResponseEntity deregister(@RequestBody DeregisterGameServerRequest request) {
+        if (Strings.isNullOrEmpty(request.getId())) {
+            ErrorResponse response = new ErrorResponse(105, "Missing game server id.");
+            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<GameServer> gameServer = repository.findById(request.getId());
+
+        if (!gameServer.isPresent()) {
+            ErrorResponse response = new ErrorResponse(106, "Game server not found.");
+            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+        }
+
+        repository.deleteById(request.getId());
+
+        DeregisterGameServerResponse response = new DeregisterGameServerResponse(request.getId());
         return new ResponseEntity(response, HttpStatus.OK);
     }
 }
