@@ -9,6 +9,7 @@ import de.opengamebackend.matchmaking.model.repositories.PlayerRepository;
 import de.opengamebackend.matchmaking.model.requests.DeregisterGameServerRequest;
 import de.opengamebackend.matchmaking.model.requests.EnqueueRequest;
 import de.opengamebackend.matchmaking.model.requests.RegisterGameServerRequest;
+import de.opengamebackend.matchmaking.model.requests.SendHeartbeatRequest;
 import de.opengamebackend.matchmaking.model.responses.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,6 +122,26 @@ public class GameServerController {
         gameServerRepository.deleteById(request.getId());
 
         DeregisterGameServerResponse response = new DeregisterGameServerResponse(request.getId());
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/sendHeartbeat")
+    public ResponseEntity sendHeartbeat(@RequestBody SendHeartbeatRequest request) {
+        if (Strings.isNullOrEmpty(request.getId())) {
+            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<GameServer> possibleGameServer = gameServerRepository.findById(request.getId());
+
+        if (!possibleGameServer.isPresent()) {
+            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        GameServer gameServer = possibleGameServer.get();
+        gameServer.setLastHeartbeat(LocalDateTime.now());
+        gameServerRepository.save(gameServer);
+
+        SendHeartbeatResponse response = new SendHeartbeatResponse(request.getId());
         return new ResponseEntity(response, HttpStatus.OK);
     }
 
