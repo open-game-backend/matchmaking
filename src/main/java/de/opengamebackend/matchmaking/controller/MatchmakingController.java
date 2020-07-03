@@ -6,10 +6,7 @@ import de.opengamebackend.matchmaking.model.entities.GameServer;
 import de.opengamebackend.matchmaking.model.entities.Player;
 import de.opengamebackend.matchmaking.model.repositories.GameServerRepository;
 import de.opengamebackend.matchmaking.model.repositories.PlayerRepository;
-import de.opengamebackend.matchmaking.model.requests.ServerDeregisterRequest;
-import de.opengamebackend.matchmaking.model.requests.ClientEnqueueRequest;
-import de.opengamebackend.matchmaking.model.requests.ServerRegisterRequest;
-import de.opengamebackend.matchmaking.model.requests.ServerSendHeartbeatRequest;
+import de.opengamebackend.matchmaking.model.requests.*;
 import de.opengamebackend.matchmaking.model.responses.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,10 +35,12 @@ public class MatchmakingController {
             new ErrorResponse(104, "Missing version.");
     private static final ErrorResponse ERROR_MISSING_GAME_SERVER_ID =
             new ErrorResponse(105, "Missing game server id.");
-    private static final ErrorResponse ERROR_MISSING_GAME_SERVER_NOT_FOUND =
+    private static final ErrorResponse ERROR_GAME_SERVER_NOT_FOUND =
             new ErrorResponse(106, "Game server not found.");
     private static final ErrorResponse ERROR_MISSING_PLAYER_ID =
             new ErrorResponse(107, "Missing player id.");
+    private static final ErrorResponse ERROR_PLAYER_NOT_FOUND =
+            new ErrorResponse(108, "Player not found.");
 
     @Autowired
     GameServerRepository gameServerRepository;
@@ -116,7 +115,7 @@ public class MatchmakingController {
         Optional<GameServer> gameServer = gameServerRepository.findById(request.getId());
 
         if (!gameServer.isPresent()) {
-            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         gameServerRepository.deleteById(request.getId());
@@ -134,7 +133,7 @@ public class MatchmakingController {
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getId());
 
         if (!optionalGameServer.isPresent()) {
-            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
 
         GameServer gameServer = optionalGameServer.get();
@@ -178,6 +177,24 @@ public class MatchmakingController {
         playerRepository.save(player);
 
         ClientEnqueueResponse response = new ClientEnqueueResponse(request.getPlayerId(), player.getStatus());
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/client/dequeue")
+    public ResponseEntity enqueue(@RequestBody ClientDequeueRequest request) {
+        if (Strings.isNullOrEmpty(request.getPlayerId())) {
+            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<Player> player = playerRepository.findById(request.getPlayerId());
+
+        if (!player.isPresent()) {
+            return new ResponseEntity(ERROR_PLAYER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        playerRepository.deleteById(request.getPlayerId());
+
+        ClientDequeueResponse response = new ClientDequeueResponse(request.getPlayerId());
         return new ResponseEntity(response, HttpStatus.OK);
     }
 }
