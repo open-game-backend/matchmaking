@@ -1,6 +1,6 @@
 package de.opengamebackend.matchmaking.model.requests;
 
-public class DeregisterGameServerRequest {
+public class ServerSendHeartbeatRequest {
     private String id;
 
     public String getId() {

@@ -1,6 +1,6 @@
 package de.opengamebackend.matchmaking.model.requests;
 
-public class EnqueueRequest {
+public class ClientEnqueueRequest {
     private String playerId;
     private String version;
     private String gameMode;

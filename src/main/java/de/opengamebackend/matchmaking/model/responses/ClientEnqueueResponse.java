@@ -2,11 +2,11 @@ package de.opengamebackend.matchmaking.model.responses;
 
 import de.opengamebackend.matchmaking.model.PlayerStatus;
 
-public class EnqueueResponse {
+public class ClientEnqueueResponse {
     private String playerId;
     private PlayerStatus status;
 
-    public EnqueueResponse(String playerId, PlayerStatus status) {
+    public ClientEnqueueResponse(String playerId, PlayerStatus status) {
         this.playerId = playerId;
         this.status = status;
     }

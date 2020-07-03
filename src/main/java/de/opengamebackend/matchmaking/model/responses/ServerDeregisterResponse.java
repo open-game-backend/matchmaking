@@ -1,9 +1,9 @@
 package de.opengamebackend.matchmaking.model.responses;
 
-public class DeregisterGameServerResponse {
+public class ServerDeregisterResponse {
     private String removedId;
 
-    public DeregisterGameServerResponse(String removedId) {
+    public ServerDeregisterResponse(String removedId) {
         this.removedId = removedId;
     }
 

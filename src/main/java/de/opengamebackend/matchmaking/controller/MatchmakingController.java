@@ -6,10 +6,10 @@ import de.opengamebackend.matchmaking.model.entities.GameServer;
 import de.opengamebackend.matchmaking.model.entities.Player;
 import de.opengamebackend.matchmaking.model.repositories.GameServerRepository;
 import de.opengamebackend.matchmaking.model.repositories.PlayerRepository;
-import de.opengamebackend.matchmaking.model.requests.DeregisterGameServerRequest;
-import de.opengamebackend.matchmaking.model.requests.EnqueueRequest;
-import de.opengamebackend.matchmaking.model.requests.RegisterGameServerRequest;
-import de.opengamebackend.matchmaking.model.requests.SendHeartbeatRequest;
+import de.opengamebackend.matchmaking.model.requests.ServerDeregisterRequest;
+import de.opengamebackend.matchmaking.model.requests.ClientEnqueueRequest;
+import de.opengamebackend.matchmaking.model.requests.ServerRegisterRequest;
+import de.opengamebackend.matchmaking.model.requests.ServerSendHeartbeatRequest;
 import de.opengamebackend.matchmaking.model.responses.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @RestController
-public class GameServerController {
+public class MatchmakingController {
     private static final ErrorResponse ERROR_MISSING_GAME_MODE =
             new ErrorResponse(100, "Missing game mode.");
     private static final ErrorResponse ERROR_MISSING_IPV4_ADDRESS =
@@ -52,18 +52,18 @@ public class GameServerController {
     @Autowired
     private ModelMapper modelMapper;
 
-    @GetMapping("/get")
-    public Iterable<GameServer> get() {
+    @GetMapping("/servers")
+    public Iterable<GameServer> getServers() {
         return gameServerRepository.findAll();
     }
 
-    @GetMapping("/getQueue")
+    @GetMapping("/queue")
     public Iterable<Player> getQueue() {
         return playerRepository.findAll();
     }
 
-    @PostMapping("/register")
-    public ResponseEntity register(@RequestBody RegisterGameServerRequest request) {
+    @PostMapping("/server/register")
+    public ResponseEntity register(@RequestBody ServerRegisterRequest request) {
         if (Strings.isNullOrEmpty(request.getGameMode())) {
             return new ResponseEntity(ERROR_MISSING_GAME_MODE, HttpStatus.BAD_REQUEST);
         }
@@ -103,12 +103,12 @@ public class GameServerController {
 
         gameServerRepository.save(gameServer);
 
-        RegisterGameServerResponse response = new RegisterGameServerResponse(gameServer.getId());
+        ServerRegisterResponse response = new ServerRegisterResponse(gameServer.getId());
         return new ResponseEntity(response, HttpStatus.OK);
     }
 
-    @PostMapping("/deregister")
-    public ResponseEntity deregister(@RequestBody DeregisterGameServerRequest request) {
+    @PostMapping("/server/deregister")
+    public ResponseEntity deregister(@RequestBody ServerDeregisterRequest request) {
         if (Strings.isNullOrEmpty(request.getId())) {
             return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
         }
@@ -121,12 +121,12 @@ public class GameServerController {
 
         gameServerRepository.deleteById(request.getId());
 
-        DeregisterGameServerResponse response = new DeregisterGameServerResponse(request.getId());
+        ServerDeregisterResponse response = new ServerDeregisterResponse(request.getId());
         return new ResponseEntity(response, HttpStatus.OK);
     }
 
-    @PostMapping("/sendHeartbeat")
-    public ResponseEntity sendHeartbeat(@RequestBody SendHeartbeatRequest request) {
+    @PostMapping("/server/sendHeartbeat")
+    public ResponseEntity sendHeartbeat(@RequestBody ServerSendHeartbeatRequest request) {
         if (Strings.isNullOrEmpty(request.getId())) {
             return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
         }
@@ -141,12 +141,12 @@ public class GameServerController {
         gameServer.setLastHeartbeat(LocalDateTime.now());
         gameServerRepository.save(gameServer);
 
-        SendHeartbeatResponse response = new SendHeartbeatResponse(request.getId());
+        ServerSendHeartbeatResponse response = new ServerSendHeartbeatResponse(request.getId());
         return new ResponseEntity(response, HttpStatus.OK);
     }
 
-    @PostMapping("/enqueue")
-    public ResponseEntity enqueue(@RequestBody EnqueueRequest request) {
+    @PostMapping("/client/enqueue")
+    public ResponseEntity enqueue(@RequestBody ClientEnqueueRequest request) {
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
             return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
         }
@@ -177,7 +177,7 @@ public class GameServerController {
         player.setStatus(PlayerStatus.QUEUED);
         playerRepository.save(player);
 
-        EnqueueResponse response = new EnqueueResponse(request.getPlayerId(), player.getStatus());
+        ClientEnqueueResponse response = new ClientEnqueueResponse(request.getPlayerId(), player.getStatus());
         return new ResponseEntity(response, HttpStatus.OK);
     }
 }

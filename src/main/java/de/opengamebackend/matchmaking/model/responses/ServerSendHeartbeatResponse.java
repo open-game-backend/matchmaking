@@ -1,9 +1,9 @@
 package de.opengamebackend.matchmaking.model.responses;
 
-public class SendHeartbeatResponse {
+public class ServerSendHeartbeatResponse {
     private String updatedId;
 
-    public SendHeartbeatResponse(String updatedId) {
+    public ServerSendHeartbeatResponse(String updatedId) {
         this.updatedId = updatedId;
     }
 

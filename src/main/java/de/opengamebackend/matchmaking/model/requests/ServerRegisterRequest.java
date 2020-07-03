@@ -1,6 +1,6 @@
 package de.opengamebackend.matchmaking.model.requests;
 
-public class RegisterGameServerRequest {
+public class ServerRegisterRequest {
     private String version;
     private String gameMode;
     private String region;
@@ -8,7 +8,7 @@ public class RegisterGameServerRequest {
     private int port;
     private int maxPlayers;
 
-    public RegisterGameServerRequest(String version, String gameMode, String region, String ipV4Address, int port, int maxPlayers) {
+    public ServerRegisterRequest(String version, String gameMode, String region, String ipV4Address, int port, int maxPlayers) {
         this.version = version;
         this.gameMode = gameMode;
         this.region = region;
