@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -78,6 +79,7 @@ public class GameServerController {
 
         GameServer gameServer = modelMapper.map(request, GameServer.class);
         gameServer.setId(UUID.randomUUID().toString());
+        gameServer.setLastHeartbeat(LocalDateTime.now());
         gameServerRepository.save(gameServer);
 
         RegisterGameServerResponse response = new RegisterGameServerResponse(gameServer.getId());
