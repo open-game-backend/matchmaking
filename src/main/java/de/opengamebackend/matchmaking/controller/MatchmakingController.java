@@ -3,6 +3,7 @@ package de.opengamebackend.matchmaking.controller;
 import com.google.common.base.Strings;
 import de.opengamebackend.matchmaking.model.MatchmakingStatus;
 import de.opengamebackend.matchmaking.model.PlayerStatus;
+import de.opengamebackend.matchmaking.model.ServerStatus;
 import de.opengamebackend.matchmaking.model.entities.GameServer;
 import de.opengamebackend.matchmaking.model.entities.Player;
 import de.opengamebackend.matchmaking.model.repositories.GameServerRepository;
@@ -110,6 +111,7 @@ public class MatchmakingController {
         }
 
         gameServer.setLastHeartbeat(LocalDateTime.now());
+        gameServer.setStatus(ServerStatus.OPEN);
 
         gameServerRepository.save(gameServer);
 
@@ -269,7 +271,8 @@ public class MatchmakingController {
         allServersStream = StreamSupport.stream(allServers.spliterator(), false);
 
         Stream<GameServer> openServers = allServersStream.filter
-                (s -> s.getPlayers().size() < s.getMaxPlayers() &&
+                (s -> s.getStatus() == ServerStatus.OPEN &&
+                        s.getPlayers().size() < s.getMaxPlayers() &&
                         s.getVersion().equals(player.getVersion()) &&
                         s.getGameMode().equals(player.getGameMode()) &&
                         s.getRegion().equals(player.getRegion()));
@@ -383,6 +386,26 @@ public class MatchmakingController {
         {
             return new ResponseEntity(ERROR_PLAYER_NOT_FOUND_FOR_SERVER, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @PostMapping("/server/setStatus")
+    public ResponseEntity setStatus(@RequestBody ServerSetStatusRequest request) {
+        if (Strings.isNullOrEmpty(request.getId())) {
+            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getId());
+
+        if (!optionalGameServer.isPresent()) {
+            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        GameServer gameServer = optionalGameServer.get();
+        gameServer.setStatus(request.getStatus());
+        gameServerRepository.save(gameServer);
+
+        ServerSetStatusResponse response = new ServerSetStatusResponse(request.getId(), request.getStatus());
+        return new ResponseEntity(response, HttpStatus.OK);
     }
 
     private void removePlayer(Player player) {

@@ -1,5 +1,7 @@
 package de.opengamebackend.matchmaking.model.responses;
 
+import de.opengamebackend.matchmaking.model.ServerStatus;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -12,6 +14,7 @@ public class GetServersResponseServer {
     private int port;
     private int maxPlayers;
     private LocalDateTime lastHeartbeat;
+    private ServerStatus status;
     private ArrayList<String> playerIds;
 
     public String getId() {
@@ -76,6 +79,14 @@ public class GetServersResponseServer {
 
     public void setLastHeartbeat(LocalDateTime lastHeartbeat) {
         this.lastHeartbeat = lastHeartbeat;
+    }
+
+    public ServerStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ServerStatus status) {
+        this.status = status;
     }
 
     public ArrayList<String> getPlayerIds() {
