@@ -1,10 +1,9 @@
 package de.opengamebackend.matchmaking.model.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class GameServer {
@@ -18,6 +17,9 @@ public class GameServer {
     private int port;
     private int maxPlayers;
     private LocalDateTime lastHeartbeat;
+
+    @OneToMany(mappedBy="gameServer")
+    private List<Player> players;
 
     public String getId() {
         return id;
@@ -81,5 +83,13 @@ public class GameServer {
 
     public void setLastHeartbeat(LocalDateTime lastHeartbeat) {
         this.lastHeartbeat = lastHeartbeat;
+    }
+
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    public boolean isFull() {
+        return players.size() >= maxPlayers;
     }
 }

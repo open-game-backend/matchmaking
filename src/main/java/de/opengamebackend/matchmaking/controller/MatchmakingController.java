@@ -1,6 +1,7 @@
 package de.opengamebackend.matchmaking.controller;
 
 import com.google.common.base.Strings;
+import de.opengamebackend.matchmaking.model.MatchmakingStatus;
 import de.opengamebackend.matchmaking.model.PlayerStatus;
 import de.opengamebackend.matchmaking.model.entities.GameServer;
 import de.opengamebackend.matchmaking.model.entities.Player;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -41,6 +43,9 @@ public class MatchmakingController {
             new ErrorResponse(107, "Missing player id.");
     private static final ErrorResponse ERROR_PLAYER_NOT_FOUND =
             new ErrorResponse(108, "Player not found.");
+
+    private static final long SERVER_HEARTBEAT_TIMEOUT_SECONDS = 120;
+    private static final long CLIENT_JOIN_TIMEOUT_SECONDS = 120;
 
     @Autowired
     GameServerRepository gameServerRepository;
@@ -181,7 +186,7 @@ public class MatchmakingController {
     }
 
     @PostMapping("/client/dequeue")
-    public ResponseEntity enqueue(@RequestBody ClientDequeueRequest request) {
+    public ResponseEntity dequeue(@RequestBody ClientDequeueRequest request) {
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
             return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
         }
@@ -195,6 +200,96 @@ public class MatchmakingController {
         playerRepository.deleteById(request.getPlayerId());
 
         ClientDequeueResponse response = new ClientDequeueResponse(request.getPlayerId());
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/client/pollMatchmaking")
+    public ResponseEntity pollMatchmaking(@RequestBody ClientPollMatchmakingRequest request) {
+        if (Strings.isNullOrEmpty(request.getPlayerId())) {
+            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<Player> optionalPlayer = playerRepository.findById(request.getPlayerId());
+
+        if (!optionalPlayer.isPresent()) {
+            return new ResponseEntity(ERROR_PLAYER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        Player player = optionalPlayer.get();
+        GameServer gameServer = player.getGameServer();
+
+        // Check if already matched.
+        if (gameServer != null) {
+            ClientPollMatchmakingResponse response = new ClientPollMatchmakingResponse();
+            response.setServerId(gameServer.getId());
+            response.setIpV4Address(gameServer.getIpV4Address());
+            response.setPort(gameServer.getPort());
+            response.setStatus(gameServer.isFull() ? MatchmakingStatus.MATCH_FOUND : MatchmakingStatus.WAITING_FOR_PLAYERS);
+
+            return new ResponseEntity(response, HttpStatus.OK);
+        }
+
+        // Clean up game servers.
+        Iterable<GameServer> allServers = gameServerRepository.findAll();
+        Stream<GameServer> allServersStream = StreamSupport.stream(allServers.spliterator(), false);
+
+        Stream<GameServer> expiredServersStream = allServersStream.filter
+                (s -> s.getLastHeartbeat().plusSeconds(SERVER_HEARTBEAT_TIMEOUT_SECONDS).isBefore(LocalDateTime.now()));
+        Iterable<GameServer> expiredServers = expiredServersStream::iterator;
+
+        gameServerRepository.deleteAll(expiredServers);
+
+        // Clean up players.
+        Iterable<Player> allPlayers = playerRepository.findAll();
+        Stream<Player> allPlayersStream = StreamSupport.stream(allPlayers.spliterator(), false);
+
+        Stream<Player> expiredPlayersStream = allPlayersStream.filter
+                (p -> p.getStatus() == PlayerStatus.MATCHED &&
+                        p.getMatchedTime().plusSeconds(CLIENT_JOIN_TIMEOUT_SECONDS).isBefore(LocalDateTime.now()));
+        Iterable<Player> expiredPlayers = expiredPlayersStream::iterator;
+
+        playerRepository.deleteAll(expiredPlayers);
+
+        // Get open servers.
+        allServers = gameServerRepository.findAll();
+        allServersStream = StreamSupport.stream(allServers.spliterator(), false);
+
+        Stream<GameServer> openServers = allServersStream.filter
+                (s -> s.getPlayers().size() < s.getMaxPlayers() &&
+                        s.getVersion().equals(player.getVersion()) &&
+                        s.getGameMode().equals(player.getGameMode()) &&
+                        s.getRegion().equals(player.getRegion()));
+
+        // Fill up servers as quickly as possible.
+        openServers = openServers.sorted(Comparator.comparingInt(s -> s.getPlayers().size()));
+
+        // Find server.
+        GameServer openServer = openServers.findFirst().orElse(null);
+
+        if (openServer == null) {
+            ClientPollMatchmakingResponse response = new ClientPollMatchmakingResponse();
+            response.setStatus(MatchmakingStatus.SERVERS_FULL);
+
+            return new ResponseEntity(response, HttpStatus.OK);
+        }
+
+        // Allocate player to server.
+        player.setStatus(PlayerStatus.MATCHED);
+        player.setGameServer(openServer);
+        player.setMatchedTime(LocalDateTime.now());
+
+        openServer.getPlayers().add(player);
+
+        playerRepository.save(player);
+        gameServerRepository.save(openServer);
+
+        // Send response.
+        ClientPollMatchmakingResponse response = new ClientPollMatchmakingResponse();
+        response.setServerId(openServer.getId());
+        response.setIpV4Address(openServer.getIpV4Address());
+        response.setPort(openServer.getPort());
+        response.setStatus(openServer.isFull() ? MatchmakingStatus.MATCH_FOUND : MatchmakingStatus.WAITING_FOR_PLAYERS);
+
         return new ResponseEntity(response, HttpStatus.OK);
     }
 }

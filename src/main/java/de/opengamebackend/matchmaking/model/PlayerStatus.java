@@ -1,5 +1,7 @@
 package de.opengamebackend.matchmaking.model;
 
 public enum PlayerStatus {
-    QUEUED
+    QUEUED,
+    MATCHED,
+    JOINED
 }
