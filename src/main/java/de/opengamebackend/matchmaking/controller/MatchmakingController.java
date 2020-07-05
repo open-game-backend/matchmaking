@@ -57,13 +57,15 @@ public class MatchmakingController {
     private ModelMapper modelMapper;
 
     @GetMapping("/servers")
-    public Iterable<GameServer> getServers() {
-        return gameServerRepository.findAll();
+    public ResponseEntity getServers() {
+        GetServersResponse response = new GetServersResponse(modelMapper, gameServerRepository.findAll());
+        return new ResponseEntity(response, HttpStatus.OK);
     }
 
     @GetMapping("/queue")
-    public Iterable<Player> getQueue() {
-        return playerRepository.findAll();
+    public ResponseEntity getQueue() {
+        GetQueueResponse response = new GetQueueResponse(modelMapper, playerRepository.findAll());
+        return new ResponseEntity(response, HttpStatus.OK);
     }
 
     @PostMapping("/server/register")
