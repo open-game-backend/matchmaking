@@ -105,6 +105,8 @@ public class MatchmakingController {
             gameServer.setGameMode(request.getGameMode());
             gameServer.setRegion(request.getRegion());
             gameServer.setMaxPlayers(request.getMaxPlayers());
+
+            gameServer.getPlayers().clear();
         }
 
         gameServer.setLastHeartbeat(LocalDateTime.now());
@@ -183,6 +185,16 @@ public class MatchmakingController {
         }
 
         player.setStatus(PlayerStatus.QUEUED);
+
+        if (player.getGameServer() != null) {
+            player.getGameServer().getPlayers().remove(player);
+            gameServerRepository.save(player.getGameServer());
+        }
+
+        player.setGameServer(null);
+        player.setMatchedTime(null);
+        player.setJoinedTime(null);
+
         playerRepository.save(player);
 
         ClientEnqueueResponse response = new ClientEnqueueResponse(request.getPlayerId(), player.getStatus());
@@ -250,9 +262,7 @@ public class MatchmakingController {
         Stream<Player> expiredPlayersStream = allPlayersStream.filter
                 (p -> p.getStatus() == PlayerStatus.MATCHED &&
                         p.getMatchedTime().plusSeconds(CLIENT_JOIN_TIMEOUT_SECONDS).isBefore(LocalDateTime.now()));
-        Iterable<Player> expiredPlayers = expiredPlayersStream::iterator;
-
-        playerRepository.deleteAll(expiredPlayers);
+        expiredPlayersStream.forEach(this::removePlayer);
 
         // Get open servers.
         allServers = gameServerRepository.findAll();
@@ -337,5 +347,54 @@ public class MatchmakingController {
         {
             return new ResponseEntity(ERROR_PLAYER_NOT_FOUND_FOR_SERVER, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @PostMapping("/server/notifyPlayerLeft")
+    public ResponseEntity notifyPlayerLeft(@RequestBody ServerNotifyPlayerLeftRequest request) {
+        if (Strings.isNullOrEmpty(request.getServerId())) {
+            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+        }
+
+        if (Strings.isNullOrEmpty(request.getPlayerId())) {
+            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getServerId());
+
+        if (!optionalGameServer.isPresent()) {
+            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        GameServer gameServer = optionalGameServer.get();
+
+        // Find player.
+        Player player = StreamSupport.stream(gameServer.getPlayers().spliterator(), false)
+                .filter(p -> p.getPlayerId().equals(request.getPlayerId()))
+                .findFirst().orElse(null);
+
+        if (player != null)
+        {
+            removePlayer(player);
+
+            ServerNotifyPlayerLeftResponse response = new ServerNotifyPlayerLeftResponse(request.getPlayerId(), request.getServerId());
+            return new ResponseEntity(response, HttpStatus.OK);
+        }
+        else
+        {
+            return new ResponseEntity(ERROR_PLAYER_NOT_FOUND_FOR_SERVER, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void removePlayer(Player player) {
+        if (player == null) {
+            return;
+        }
+
+        if (player.getGameServer() != null) {
+            player.getGameServer().getPlayers().remove(player);
+            gameServerRepository.save(player.getGameServer());
+        }
+
+        playerRepository.delete(player);
     }
 }
