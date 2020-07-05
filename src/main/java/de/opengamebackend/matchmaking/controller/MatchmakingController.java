@@ -43,6 +43,8 @@ public class MatchmakingController {
             new ErrorResponse(107, "Missing player id.");
     private static final ErrorResponse ERROR_PLAYER_NOT_FOUND =
             new ErrorResponse(108, "Player not found.");
+    private static final ErrorResponse ERROR_PLAYER_NOT_FOUND_FOR_SERVER =
+            new ErrorResponse(109, "Player not found for server.");
 
     private static final long SERVER_HEARTBEAT_TIMEOUT_SECONDS = 120;
     private static final long CLIENT_JOIN_TIMEOUT_SECONDS = 120;
@@ -293,5 +295,47 @@ public class MatchmakingController {
         response.setStatus(openServer.isFull() ? MatchmakingStatus.MATCH_FOUND : MatchmakingStatus.WAITING_FOR_PLAYERS);
 
         return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/server/notifyPlayerJoined")
+    public ResponseEntity notifyPlayerJoined(@RequestBody ServerNotifyPlayerJoinedRequest request) {
+        if (Strings.isNullOrEmpty(request.getServerId())) {
+            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+        }
+
+        if (Strings.isNullOrEmpty(request.getPlayerId())) {
+            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getServerId());
+
+        if (!optionalGameServer.isPresent()) {
+            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+        }
+
+        GameServer gameServer = optionalGameServer.get();
+
+        // Find player.
+        Player player = StreamSupport.stream(gameServer.getPlayers().spliterator(), false)
+                .filter(p -> p.getPlayerId().equals(request.getPlayerId()))
+                .findFirst().orElse(null);
+
+        if (player != null)
+        {
+            if (player.getStatus() != PlayerStatus.JOINED)
+            {
+                player.setStatus(PlayerStatus.JOINED);
+                player.setJoinedTime(LocalDateTime.now());
+
+                playerRepository.save(player);
+            }
+
+            ServerNotifyPlayerJoinedResponse response = new ServerNotifyPlayerJoinedResponse(request.getPlayerId(), request.getServerId());
+            return new ResponseEntity(response, HttpStatus.OK);
+        }
+        else
+        {
+            return new ResponseEntity(ERROR_PLAYER_NOT_FOUND_FOR_SERVER, HttpStatus.BAD_REQUEST);
+        }
     }
 }
