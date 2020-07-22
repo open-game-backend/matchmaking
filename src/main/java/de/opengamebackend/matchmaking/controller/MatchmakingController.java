@@ -10,6 +10,7 @@ import de.opengamebackend.matchmaking.model.repositories.GameServerRepository;
 import de.opengamebackend.matchmaking.model.repositories.PlayerRepository;
 import de.opengamebackend.matchmaking.model.requests.*;
 import de.opengamebackend.matchmaking.model.responses.*;
+import de.opengamebackend.net.ApiException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,25 +29,6 @@ import java.util.stream.StreamSupport;
 
 @RestController
 public class MatchmakingController {
-    private static final ErrorResponse ERROR_MISSING_GAME_MODE =
-            new ErrorResponse(100, "Missing game mode.");
-    private static final ErrorResponse ERROR_MISSING_IPV4_ADDRESS =
-            new ErrorResponse(101, "Missing IPv4 address.");
-    private static final ErrorResponse ERROR_MISSING_REGION =
-            new ErrorResponse(103, "Missing region.");
-    private static final ErrorResponse ERROR_MISSING_VERSION =
-            new ErrorResponse(104, "Missing version.");
-    private static final ErrorResponse ERROR_MISSING_GAME_SERVER_ID =
-            new ErrorResponse(105, "Missing game server id.");
-    private static final ErrorResponse ERROR_GAME_SERVER_NOT_FOUND =
-            new ErrorResponse(106, "Game server not found.");
-    private static final ErrorResponse ERROR_MISSING_PLAYER_ID =
-            new ErrorResponse(107, "Missing player id.");
-    private static final ErrorResponse ERROR_PLAYER_NOT_FOUND =
-            new ErrorResponse(108, "Player not found.");
-    private static final ErrorResponse ERROR_PLAYER_NOT_FOUND_FOR_SERVER =
-            new ErrorResponse(109, "Player not found for server.");
-
     private static final long SERVER_HEARTBEAT_TIMEOUT_SECONDS = 120;
     private static final long CLIENT_JOIN_TIMEOUT_SECONDS = 120;
 
@@ -60,33 +42,34 @@ public class MatchmakingController {
     private ModelMapper modelMapper;
 
     @GetMapping("/servers")
-    public ResponseEntity getServers() {
+    public ResponseEntity<GetServersResponse> getServers() {
         GetServersResponse response = new GetServersResponse(modelMapper, gameServerRepository.findAll());
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/queue")
-    public ResponseEntity getQueue() {
+    public ResponseEntity<GetQueueResponse> getQueue() {
         GetQueueResponse response = new GetQueueResponse(modelMapper, playerRepository.findAll());
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/server/register")
-    public ResponseEntity register(@RequestBody ServerRegisterRequest request) {
+    public ResponseEntity<ServerRegisterResponse> register(@RequestBody ServerRegisterRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getGameMode())) {
-            return new ResponseEntity(ERROR_MISSING_GAME_MODE, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_MODE);
         }
 
         if (Strings.isNullOrEmpty(request.getIpV4Address())) {
-            return new ResponseEntity(ERROR_MISSING_IPV4_ADDRESS, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_IPV4_ADDRESS);
         }
 
         if (Strings.isNullOrEmpty(request.getRegion())) {
-            return new ResponseEntity(ERROR_MISSING_REGION, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_REGION);
         }
 
         if (Strings.isNullOrEmpty(request.getVersion())) {
-            return new ResponseEntity(ERROR_MISSING_VERSION, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_VERSION);
         }
 
         // Check if already exists.
@@ -116,37 +99,39 @@ public class MatchmakingController {
         gameServerRepository.save(gameServer);
 
         ServerRegisterResponse response = new ServerRegisterResponse(gameServer.getId());
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/server/deregister")
-    public ResponseEntity deregister(@RequestBody ServerDeregisterRequest request) {
+    public ResponseEntity<ServerDeregisterResponse> deregister(@RequestBody ServerDeregisterRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getId())) {
-            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
         }
 
         Optional<GameServer> gameServer = gameServerRepository.findById(request.getId());
 
         if (!gameServer.isPresent()) {
-            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
         }
 
         gameServerRepository.deleteById(request.getId());
 
         ServerDeregisterResponse response = new ServerDeregisterResponse(request.getId());
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/server/sendHeartbeat")
-    public ResponseEntity sendHeartbeat(@RequestBody ServerSendHeartbeatRequest request) {
+    public ResponseEntity<ServerSendHeartbeatResponse> sendHeartbeat(@RequestBody ServerSendHeartbeatRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getId())) {
-            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getId());
 
         if (!optionalGameServer.isPresent()) {
-            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
         }
 
         GameServer gameServer = optionalGameServer.get();
@@ -154,25 +139,26 @@ public class MatchmakingController {
         gameServerRepository.save(gameServer);
 
         ServerSendHeartbeatResponse response = new ServerSendHeartbeatResponse(request.getId());
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/client/enqueue")
-    public ResponseEntity enqueue(@RequestBody ClientEnqueueRequest request) {
+    public ResponseEntity<ClientEnqueueResponse> enqueue(@RequestBody ClientEnqueueRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
         }
 
         if (Strings.isNullOrEmpty(request.getGameMode())) {
-            return new ResponseEntity(ERROR_MISSING_GAME_MODE, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_MODE);
         }
 
         if (Strings.isNullOrEmpty(request.getRegion())) {
-            return new ResponseEntity(ERROR_MISSING_REGION, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_REGION);
         }
 
         if (Strings.isNullOrEmpty(request.getVersion())) {
-            return new ResponseEntity(ERROR_MISSING_VERSION, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_VERSION);
         }
 
         // Check if already exists.
@@ -200,37 +186,39 @@ public class MatchmakingController {
         playerRepository.save(player);
 
         ClientEnqueueResponse response = new ClientEnqueueResponse(request.getPlayerId(), player.getStatus());
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/client/dequeue")
-    public ResponseEntity dequeue(@RequestBody ClientDequeueRequest request) {
+    public ResponseEntity<ClientDequeueResponse> dequeue(@RequestBody ClientDequeueRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
         }
 
         Optional<Player> player = playerRepository.findById(request.getPlayerId());
 
         if (!player.isPresent()) {
-            return new ResponseEntity(ERROR_PLAYER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND);
         }
 
         playerRepository.deleteById(request.getPlayerId());
 
         ClientDequeueResponse response = new ClientDequeueResponse(request.getPlayerId());
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/client/pollMatchmaking")
-    public ResponseEntity pollMatchmaking(@RequestBody ClientPollMatchmakingRequest request) {
+    public ResponseEntity<ClientPollMatchmakingResponse> pollMatchmaking(@RequestBody ClientPollMatchmakingRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
         }
 
         Optional<Player> optionalPlayer = playerRepository.findById(request.getPlayerId());
 
         if (!optionalPlayer.isPresent()) {
-            return new ResponseEntity(ERROR_PLAYER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND);
         }
 
         Player player = optionalPlayer.get();
@@ -244,7 +232,7 @@ public class MatchmakingController {
             response.setPort(gameServer.getPort());
             response.setStatus(gameServer.isFull() ? MatchmakingStatus.MATCH_FOUND : MatchmakingStatus.WAITING_FOR_PLAYERS);
 
-            return new ResponseEntity(response, HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         // Clean up game servers.
@@ -287,7 +275,7 @@ public class MatchmakingController {
             ClientPollMatchmakingResponse response = new ClientPollMatchmakingResponse();
             response.setStatus(MatchmakingStatus.SERVERS_FULL);
 
-            return new ResponseEntity(response, HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
         // Allocate player to server.
@@ -307,23 +295,24 @@ public class MatchmakingController {
         response.setPort(openServer.getPort());
         response.setStatus(openServer.isFull() ? MatchmakingStatus.MATCH_FOUND : MatchmakingStatus.WAITING_FOR_PLAYERS);
 
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/server/notifyPlayerJoined")
-    public ResponseEntity notifyPlayerJoined(@RequestBody ServerNotifyPlayerJoinedRequest request) {
+    public ResponseEntity<ServerNotifyPlayerJoinedResponse> notifyPlayerJoined(@RequestBody ServerNotifyPlayerJoinedRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getServerId())) {
-            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
         }
 
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getServerId());
 
         if (!optionalGameServer.isPresent()) {
-            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
         }
 
         GameServer gameServer = optionalGameServer.get();
@@ -344,28 +333,29 @@ public class MatchmakingController {
             }
 
             ServerNotifyPlayerJoinedResponse response = new ServerNotifyPlayerJoinedResponse(request.getPlayerId(), request.getServerId());
-            return new ResponseEntity(response, HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
         else
         {
-            return new ResponseEntity(ERROR_PLAYER_NOT_FOUND_FOR_SERVER, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND_FOR_SERVER);
         }
     }
 
     @PostMapping("/server/notifyPlayerLeft")
-    public ResponseEntity notifyPlayerLeft(@RequestBody ServerNotifyPlayerLeftRequest request) {
+    public ResponseEntity<ServerNotifyPlayerLeftResponse> notifyPlayerLeft(@RequestBody ServerNotifyPlayerLeftRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getServerId())) {
-            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
         }
 
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            return new ResponseEntity(ERROR_MISSING_PLAYER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getServerId());
 
         if (!optionalGameServer.isPresent()) {
-            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
         }
 
         GameServer gameServer = optionalGameServer.get();
@@ -380,24 +370,25 @@ public class MatchmakingController {
             removePlayer(player);
 
             ServerNotifyPlayerLeftResponse response = new ServerNotifyPlayerLeftResponse(request.getPlayerId(), request.getServerId());
-            return new ResponseEntity(response, HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
         else
         {
-            return new ResponseEntity(ERROR_PLAYER_NOT_FOUND_FOR_SERVER, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND_FOR_SERVER);
         }
     }
 
     @PostMapping("/server/setStatus")
-    public ResponseEntity setStatus(@RequestBody ServerSetStatusRequest request) {
+    public ResponseEntity<ServerSetStatusResponse> setStatus(@RequestBody ServerSetStatusRequest request)
+            throws ApiException {
         if (Strings.isNullOrEmpty(request.getId())) {
-            return new ResponseEntity(ERROR_MISSING_GAME_SERVER_ID, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getId());
 
         if (!optionalGameServer.isPresent()) {
-            return new ResponseEntity(ERROR_GAME_SERVER_NOT_FOUND, HttpStatus.BAD_REQUEST);
+            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
         }
 
         GameServer gameServer = optionalGameServer.get();
@@ -405,7 +396,7 @@ public class MatchmakingController {
         gameServerRepository.save(gameServer);
 
         ServerSetStatusResponse response = new ServerSetStatusResponse(request.getId(), request.getStatus());
-        return new ResponseEntity(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private void removePlayer(Player player) {
