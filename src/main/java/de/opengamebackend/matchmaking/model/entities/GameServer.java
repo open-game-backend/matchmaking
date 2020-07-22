@@ -4,7 +4,6 @@ import de.opengamebackend.matchmaking.model.ServerStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity

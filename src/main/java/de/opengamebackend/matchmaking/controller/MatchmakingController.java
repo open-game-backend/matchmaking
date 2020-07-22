@@ -164,14 +164,7 @@ public class MatchmakingController {
         // Check if already exists.
         Optional<Player> optionalPlayer = playerRepository.findById(request.getPlayerId());
 
-        Player player = null;
-
-        if (optionalPlayer.isPresent()) {
-            player = optionalPlayer.get();
-        } else {
-            player = modelMapper.map(request, Player.class);
-        }
-
+        Player player = optionalPlayer.orElseGet(() -> modelMapper.map(request, Player.class));
         player.setStatus(PlayerStatus.QUEUED);
 
         if (player.getGameServer() != null) {
@@ -318,7 +311,7 @@ public class MatchmakingController {
         GameServer gameServer = optionalGameServer.get();
 
         // Find player.
-        Player player = StreamSupport.stream(gameServer.getPlayers().spliterator(), false)
+        Player player = gameServer.getPlayers().stream()
                 .filter(p -> p.getPlayerId().equals(request.getPlayerId()))
                 .findFirst().orElse(null);
 
@@ -361,7 +354,7 @@ public class MatchmakingController {
         GameServer gameServer = optionalGameServer.get();
 
         // Find player.
-        Player player = StreamSupport.stream(gameServer.getPlayers().spliterator(), false)
+        Player player = gameServer.getPlayers().stream()
                 .filter(p -> p.getPlayerId().equals(request.getPlayerId()))
                 .findFirst().orElse(null);
 

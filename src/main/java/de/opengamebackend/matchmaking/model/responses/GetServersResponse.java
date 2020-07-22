@@ -4,12 +4,7 @@ import de.opengamebackend.matchmaking.model.entities.GameServer;
 import de.opengamebackend.matchmaking.model.entities.Player;
 import org.modelmapper.ModelMapper;
 
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import java.lang.reflect.Array;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 public class GetServersResponse {
     private ArrayList<GetServersResponseServer> servers;

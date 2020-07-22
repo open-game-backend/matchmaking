@@ -1,10 +1,8 @@
 package de.opengamebackend.matchmaking.model.responses;
 
-import de.opengamebackend.matchmaking.model.PlayerStatus;
 import de.opengamebackend.matchmaking.model.entities.Player;
 import org.modelmapper.ModelMapper;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class GetQueueResponse {
