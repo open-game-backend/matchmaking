@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,13 +44,43 @@ public class MatchmakingController {
 
     @GetMapping("/servers")
     public ResponseEntity<GetServersResponse> getServers() {
-        GetServersResponse response = new GetServersResponse(modelMapper, gameServerRepository.findAll());
+        GetServersResponse response = new GetServersResponse();
+
+        ArrayList<GetServersResponseServer> servers = new ArrayList<>();
+
+        for (GameServer server : gameServerRepository.findAll()) {
+            GetServersResponseServer responseServer = modelMapper.map(server, GetServersResponseServer.class);
+
+            ArrayList<String> playerIds = new ArrayList<>();
+
+            for (Player player : server.getPlayers()) {
+                playerIds.add(player.getPlayerId());
+            }
+
+            responseServer.setPlayerIds(playerIds);
+
+            servers.add(responseServer);
+        }
+
+        response.setServers(servers);
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/queue")
     public ResponseEntity<GetQueueResponse> getQueue() {
-        GetQueueResponse response = new GetQueueResponse(modelMapper, playerRepository.findAll());
+        GetQueueResponse response = new GetQueueResponse();
+
+        ArrayList<GetQueueResponsePlayer> players = new ArrayList<>();
+
+        for (Player player : playerRepository.findAll()) {
+            GetQueueResponsePlayer responsePlayer = modelMapper.map(player, GetQueueResponsePlayer.class);
+            responsePlayer.setServerId(player.getGameServer() != null ? player.getGameServer().getId() : null);
+            players.add(responsePlayer);
+        }
+
+        response.setPlayers(players);
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
