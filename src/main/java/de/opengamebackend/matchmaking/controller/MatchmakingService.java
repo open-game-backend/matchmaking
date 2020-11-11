@@ -103,20 +103,15 @@ public class MatchmakingService {
         GameServer gameServer = allServersStream.filter(s ->
                 s.getIpV4Address().equals(request.getIpV4Address()) &&
                         s.getPort() == request.getPort())
-                .findFirst().orElse(null);
+                .findFirst().orElse(new GameServer());
 
-        if (gameServer == null) {
-            gameServer = modelMapper.map(request, GameServer.class);
+        modelMapper.map(request, gameServer);
+
+        if (gameServer.getId() == null) {
             gameServer.setId(UUID.randomUUID().toString());
-        } else {
-            gameServer.setVersion(request.getVersion());
-            gameServer.setGameMode(request.getGameMode());
-            gameServer.setRegion(request.getRegion());
-            gameServer.setMaxPlayers(request.getMaxPlayers());
-
-            gameServer.getPlayers().clear();
         }
 
+        gameServer.getPlayers().clear();
         gameServer.setLastHeartbeat(LocalDateTime.now());
         gameServer.setStatus(ServerStatus.OPEN);
 
@@ -137,7 +132,7 @@ public class MatchmakingService {
             throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
         }
 
-        gameServerRepository.deleteById(request.getId());
+        gameServerRepository.delete(gameServer.get());
 
         return new ServerDeregisterResponse(request.getId());
     }
@@ -180,11 +175,13 @@ public class MatchmakingService {
         }
 
         // Check if already exists.
-        Optional<Player> optionalPlayer = playerRepository.findById(request.getPlayerId());
+        Player player = playerRepository.findById(request.getPlayerId()).orElse(new Player());
 
-        Player player = optionalPlayer.orElseGet(() -> modelMapper.map(request, Player.class));
+        // Update data.
+        modelMapper.map(request, player);
         player.setStatus(PlayerStatus.QUEUED);
 
+        // Remove from any servers.
         if (player.getGameServer() != null) {
             player.getGameServer().getPlayers().remove(player);
             gameServerRepository.save(player.getGameServer());
@@ -211,7 +208,7 @@ public class MatchmakingService {
             throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND);
         }
 
-        playerRepository.deleteById(request.getPlayerId());
+        playerRepository.delete(player.get());
 
         return new ClientDequeueResponse(request.getPlayerId());
     }

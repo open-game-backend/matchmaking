@@ -4,6 +4,7 @@ import de.opengamebackend.matchmaking.model.ServerStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -22,6 +23,10 @@ public class GameServer {
 
     @OneToMany(mappedBy="gameServer")
     private List<Player> players;
+
+    public GameServer() {
+        players = new ArrayList<>();
+    }
 
     public String getId() {
         return id;
