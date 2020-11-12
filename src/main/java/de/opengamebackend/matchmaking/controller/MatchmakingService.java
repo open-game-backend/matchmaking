@@ -17,17 +17,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Service
 public class MatchmakingService {
-    private static final long SERVER_HEARTBEAT_TIMEOUT_SECONDS = 120;
-    private static final long CLIENT_JOIN_TIMEOUT_SECONDS = 120;
+    public static final long SERVER_HEARTBEAT_TIMEOUT_SECONDS = 120;
+    public static final long CLIENT_JOIN_TIMEOUT_SECONDS = 120;
 
     private GameServerRepository gameServerRepository;
     private PlayerRepository playerRepository;
@@ -245,7 +243,7 @@ public class MatchmakingService {
 
         Stream<GameServer> expiredServersStream = allServersStream.filter
                 (s -> s.getLastHeartbeat().plusSeconds(SERVER_HEARTBEAT_TIMEOUT_SECONDS).isBefore(LocalDateTime.now()));
-        Iterable<GameServer> expiredServers = expiredServersStream::iterator;
+        List<GameServer> expiredServers = expiredServersStream.collect(Collectors.toList());
 
         gameServerRepository.deleteAll(expiredServers);
 
@@ -335,7 +333,7 @@ public class MatchmakingService {
                 playerRepository.save(player);
             }
 
-            return new ServerNotifyPlayerJoinedResponse(request.getPlayerId(), request.getServerId());
+            return new ServerNotifyPlayerJoinedResponse(request.getServerId(), request.getPlayerId());
         }
         else
         {
@@ -370,7 +368,7 @@ public class MatchmakingService {
         {
             removePlayer(player);
 
-            return new ServerNotifyPlayerLeftResponse(request.getPlayerId(), request.getServerId());
+            return new ServerNotifyPlayerLeftResponse(request.getServerId(), request.getPlayerId());
         }
         else
         {
