@@ -1,5 +1,6 @@
 package de.opengamebackend.matchmaking.controller;
 
+import de.opengamebackend.matchmaking.model.MatchmakingStatus;
 import de.opengamebackend.matchmaking.model.PlayerStatus;
 import de.opengamebackend.matchmaking.model.ServerStatus;
 import de.opengamebackend.matchmaking.model.entities.GameServer;
@@ -17,6 +18,7 @@ import org.modelmapper.ModelMapper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -436,5 +438,465 @@ public class MatchmakingServiceTests {
         // THEN
         assertThat(response).isNotNull();
         assertThat(response.getDequeuedPlayerId()).isEqualTo(request.getPlayerId());
+    }
+
+    @Test
+    public void givenMissingId_whenPollMatchmaking_thenThrowException() {
+        // GIVEN
+        ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.pollMatchmaking(request));
+    }
+
+    @Test
+    public void givenInvalidId_whenPollMatchmaking_thenThrowException() {
+        // GIVEN
+        ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
+        when(request.getPlayerId()).thenReturn("testId");
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.pollMatchmaking(request));
+    }
+
+    @Test
+    public void givenMatchedPlayer_whenPollMatchmaking_thenReturnMatch() throws ApiException {
+        // GIVEN
+        ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        GameServer gameServer = mock(GameServer.class);
+        when(gameServer.getId()).thenReturn("testServerId");
+        when(gameServer.getIpV4Address()).thenReturn("127.0.0.1");
+        when(gameServer.getPort()).thenReturn(1234);
+
+        Player player = mock(Player.class);
+        when(player.getGameServer()).thenReturn(gameServer);
+
+        when(playerRepository.findById(request.getPlayerId())).thenReturn(Optional.of(player));
+
+        // WHEN
+        ClientPollMatchmakingResponse response = matchmakingService.pollMatchmaking(request);
+
+        // THEN
+        assertThat(response).isNotNull();
+        assertThat(response.getServerId()).isEqualTo(gameServer.getId());
+        assertThat(response.getIpV4Address()).isEqualTo(gameServer.getIpV4Address());
+        assertThat(response.getPort()).isEqualTo(gameServer.getPort());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void givenExpiredServer_whenPollMatchmaking_thenRemoveServer() throws ApiException {
+        // GIVEN
+        ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        Player player = mock(Player.class);
+        when(playerRepository.findById(request.getPlayerId())).thenReturn(Optional.of(player));
+
+        GameServer gameServer = mock(GameServer.class);
+        when(gameServer.getLastHeartbeat()).thenReturn(LocalDateTime.now().minusSeconds(MatchmakingService.SERVER_HEARTBEAT_TIMEOUT_SECONDS + 1));
+        when(gameServerRepository.findAll()).thenReturn(Lists.newArrayList(gameServer));
+
+        // WHEN
+        matchmakingService.pollMatchmaking(request);
+
+        // THEN
+        ArgumentCaptor<List<GameServer>> argument = ArgumentCaptor.forClass(List.class);
+        verify(gameServerRepository).deleteAll(argument.capture());
+        List<GameServer> deletedServers = argument.getValue();
+
+        assertThat(deletedServers).isNotNull();
+        assertThat(deletedServers).contains(gameServer);
+    }
+
+    @Test
+    public void givenExpiredMatchedPlayer_whenPollMatchmaking_thenRemovePlayer() throws ApiException {
+        // GIVEN
+        ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        Player player = mock(Player.class);
+        when(player.getStatus()).thenReturn(PlayerStatus.MATCHED);
+        when(player.getMatchedTime()).thenReturn(LocalDateTime.now().minusSeconds(MatchmakingService.CLIENT_JOIN_TIMEOUT_SECONDS + 1));
+
+        when(playerRepository.findById(request.getPlayerId())).thenReturn(Optional.of(player));
+        when(playerRepository.findAll()).thenReturn(Lists.newArrayList(player));
+
+        // WHEN
+        matchmakingService.pollMatchmaking(request);
+
+        // THEN
+        verify(playerRepository).delete(player);
+    }
+
+    @Test
+    public void givenFullServers_whenPollMatchmaking_thenReturnServersFull() throws ApiException {
+        // GIVEN
+        ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        Player player = mock(Player.class);
+        when(playerRepository.findById(request.getPlayerId())).thenReturn(Optional.of(player));
+
+        // WHEN
+        ClientPollMatchmakingResponse response = matchmakingService.pollMatchmaking(request);
+
+        // THEN
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(MatchmakingStatus.SERVERS_FULL);
+    }
+
+    @Test
+    public void givenMatchingOpenServer_whenPollMatchmaking_thenAllocatePlayerToServer() throws ApiException {
+        // GIVEN
+        ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        String gameMode = "GM";
+        String region = "EU";
+        String version = "1.0";
+
+        Player player = mock(Player.class);
+        when(player.getGameMode()).thenReturn(gameMode);
+        when(player.getRegion()).thenReturn(region);
+        when(player.getVersion()).thenReturn(version);
+
+        when(playerRepository.findById(request.getPlayerId())).thenReturn(Optional.of(player));
+
+        GameServer gameServer = mock(GameServer.class);
+        ArrayList<Player> allocatedPlayers = new ArrayList<>();
+        when(gameServer.getStatus()).thenReturn(ServerStatus.OPEN);
+        when(gameServer.getPlayers()).thenReturn(allocatedPlayers);
+        when(gameServer.getMaxPlayers()).thenReturn(2);
+        when(gameServer.getGameMode()).thenReturn(gameMode);
+        when(gameServer.getRegion()).thenReturn(region);
+        when(gameServer.getVersion()).thenReturn(version);
+        when(gameServer.getLastHeartbeat()).thenReturn(LocalDateTime.now());
+
+        when(gameServerRepository.findAll()).thenReturn(Lists.newArrayList(gameServer));
+
+        // WHEN
+        matchmakingService.pollMatchmaking(request);
+
+        // THEN
+        verify(player).setStatus(PlayerStatus.MATCHED);
+        verify(player).setGameServer(gameServer);
+        verify(player).setMatchedTime(any(LocalDateTime.class));
+
+        assertThat(allocatedPlayers).containsExactly(player);
+
+        verify(gameServerRepository).save(gameServer);
+        verify(playerRepository).save(player);
+    }
+
+    @Test
+    public void givenMatchingOpenServer_whenPollMatchmaking_thenReturnServer() throws ApiException {
+        // GIVEN
+        ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        String gameMode = "GM";
+        String region = "EU";
+        String version = "1.0";
+
+        Player player = mock(Player.class);
+        when(player.getGameMode()).thenReturn(gameMode);
+        when(player.getRegion()).thenReturn(region);
+        when(player.getVersion()).thenReturn(version);
+
+        when(playerRepository.findById(request.getPlayerId())).thenReturn(Optional.of(player));
+
+        GameServer gameServer = mock(GameServer.class);
+        ArrayList<Player> allocatedPlayers = new ArrayList<>();
+        when(gameServer.getId()).thenReturn("testServerId");
+        when(gameServer.getStatus()).thenReturn(ServerStatus.OPEN);
+        when(gameServer.getPlayers()).thenReturn(allocatedPlayers);
+        when(gameServer.getMaxPlayers()).thenReturn(2);
+        when(gameServer.getGameMode()).thenReturn(gameMode);
+        when(gameServer.getRegion()).thenReturn(region);
+        when(gameServer.getVersion()).thenReturn(version);
+        when(gameServer.getLastHeartbeat()).thenReturn(LocalDateTime.now());
+        when(gameServer.getIpV4Address()).thenReturn("127.0.0.1");
+        when(gameServer.getPort()).thenReturn(1234);
+
+        when(gameServerRepository.findAll()).thenReturn(Lists.newArrayList(gameServer));
+
+        // WHEN
+        ClientPollMatchmakingResponse response = matchmakingService.pollMatchmaking(request);
+
+        // THEN
+        assertThat(response).isNotNull();
+        assertThat(response.getServerId()).isEqualTo(gameServer.getId());
+        assertThat(response.getIpV4Address()).isEqualTo(gameServer.getIpV4Address());
+        assertThat(response.getPort()).isEqualTo(gameServer.getPort());
+        assertThat(response.getStatus()).isEqualTo(MatchmakingStatus.WAITING_FOR_PLAYERS);
+    }
+
+    @Test
+    public void givenMissingServerId_whenNotifyPlayerJoined_thenThrowException() {
+        // GIVEN
+        ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerJoined(request));
+    }
+
+    @Test
+    public void givenMissingPlayerId_whenNotifyPlayerJoined_thenThrowException() {
+        // GIVEN
+        ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
+        when(request.getServerId()).thenReturn("testId");
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerJoined(request));
+    }
+
+    @Test
+    public void givenInvalidServerId_whenNotifyPlayerJoined_thenThrowException() {
+        // GIVEN
+        ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
+        when(request.getServerId()).thenReturn("testServerId");
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerJoined(request));
+    }
+
+    @Test
+    public void givenInvalidPlayerId_whenNotifyPlayerJoined_thenThrowException() {
+        // GIVEN
+        ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
+        when(request.getServerId()).thenReturn("testServerId");
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        GameServer gameServer = mock(GameServer.class);
+        when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerJoined(request));
+    }
+
+    @Test
+    public void givenValidPlayerAndServer_whenNotifyPlayerJoined_thenSetPlayerStatus() throws ApiException {
+        // GIVEN
+        String playerId = "testPlayerId";
+        String serverId = "testServerId";
+
+        ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
+        when(request.getPlayerId()).thenReturn(playerId);
+        when(request.getServerId()).thenReturn(serverId);
+
+        GameServer gameServer = mock(GameServer.class);
+        Player player = mock(Player.class);
+        ArrayList<Player> waitingPlayers = Lists.newArrayList(player);
+
+        when(gameServer.getPlayers()).thenReturn(waitingPlayers);
+        when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
+
+        when(player.getPlayerId()).thenReturn(playerId);
+
+        // WHEN
+        matchmakingService.notifyPlayerJoined(request);
+
+        // THEN
+        verify(player).setStatus(PlayerStatus.JOINED);
+        verify(player).setJoinedTime(any(LocalDateTime.class));
+
+        verify(playerRepository).save(player);
+    }
+
+    @Test
+    public void givenValidPlayerAndServer_whenNotifyPlayerJoined_thenReturnResponse() throws ApiException {
+        // GIVEN
+        String playerId = "testPlayerId";
+        String serverId = "testServerId";
+
+        ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
+        when(request.getPlayerId()).thenReturn(playerId);
+        when(request.getServerId()).thenReturn(serverId);
+
+        GameServer gameServer = mock(GameServer.class);
+        Player player = mock(Player.class);
+        ArrayList<Player> waitingPlayers = Lists.newArrayList(player);
+
+        when(gameServer.getPlayers()).thenReturn(waitingPlayers);
+        when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
+
+        when(player.getPlayerId()).thenReturn(playerId);
+
+        // WHEN
+        ServerNotifyPlayerJoinedResponse response = matchmakingService.notifyPlayerJoined(request);
+
+        // THEN
+        assertThat(response).isNotNull();
+        assertThat(response.getPlayerId()).isEqualTo(playerId);
+        assertThat(response.getServerId()).isEqualTo(serverId);
+    }
+
+    @Test
+    public void givenMissingServerId_whenNotifyPlayerLeft_thenThrowException() {
+        // GIVEN
+        ServerNotifyPlayerLeftRequest request = mock(ServerNotifyPlayerLeftRequest.class);
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerLeft(request));
+    }
+
+    @Test
+    public void givenMissingPlayerId_whenNotifyPlayerLeft_thenThrowException() {
+        // GIVEN
+        ServerNotifyPlayerLeftRequest request = mock(ServerNotifyPlayerLeftRequest.class);
+        when(request.getServerId()).thenReturn("testId");
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerLeft(request));
+    }
+
+    @Test
+    public void givenInvalidServerId_whenNotifyPlayerLeft_thenThrowException() {
+        // GIVEN
+        ServerNotifyPlayerLeftRequest request = mock(ServerNotifyPlayerLeftRequest.class);
+        when(request.getServerId()).thenReturn("testServerId");
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerLeft(request));
+    }
+
+    @Test
+    public void givenInvalidPlayerId_whenNotifyPlayerLeft_thenThrowException() {
+        // GIVEN
+        ServerNotifyPlayerLeftRequest request = mock(ServerNotifyPlayerLeftRequest.class);
+        when(request.getServerId()).thenReturn("testServerId");
+        when(request.getPlayerId()).thenReturn("testPlayerId");
+
+        GameServer gameServer = mock(GameServer.class);
+        when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerLeft(request));
+    }
+
+    @Test
+    public void givenValidPlayerAndServer_whenNotifyPlayerLeft_thenRemovePlayer() throws ApiException {
+        // GIVEN
+        String playerId = "testPlayerId";
+        String serverId = "testServerId";
+
+        ServerNotifyPlayerLeftRequest request = mock(ServerNotifyPlayerLeftRequest.class);
+        when(request.getPlayerId()).thenReturn(playerId);
+        when(request.getServerId()).thenReturn(serverId);
+
+        GameServer gameServer = mock(GameServer.class);
+        Player player = mock(Player.class);
+        ArrayList<Player> activePlayers = Lists.newArrayList(player);
+
+        when(gameServer.getPlayers()).thenReturn(activePlayers);
+        when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
+
+        when(player.getPlayerId()).thenReturn(playerId);
+        when(player.getGameServer()).thenReturn(gameServer);
+
+        // WHEN
+        matchmakingService.notifyPlayerLeft(request);
+
+        // THEN
+        assertThat(activePlayers).doesNotContain(player);
+
+        verify(gameServerRepository).save(gameServer);
+        verify(playerRepository).delete(player);
+    }
+
+    @Test
+    public void givenValidPlayerAndServer_whenNotifyPlayerLeft_thenReturnResponse() throws ApiException {
+        // GIVEN
+        String playerId = "testPlayerId";
+        String serverId = "testServerId";
+
+        ServerNotifyPlayerLeftRequest request = mock(ServerNotifyPlayerLeftRequest.class);
+        when(request.getPlayerId()).thenReturn(playerId);
+        when(request.getServerId()).thenReturn(serverId);
+
+        GameServer gameServer = mock(GameServer.class);
+        Player player = mock(Player.class);
+        ArrayList<Player> activePlayers = Lists.newArrayList(player);
+
+        when(gameServer.getPlayers()).thenReturn(activePlayers);
+        when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
+
+        when(player.getPlayerId()).thenReturn(playerId);
+        when(player.getGameServer()).thenReturn(gameServer);
+
+        // WHEN
+        ServerNotifyPlayerLeftResponse response = matchmakingService.notifyPlayerLeft(request);
+
+        // THEN
+        assertThat(response).isNotNull();
+        assertThat(response.getPlayerId()).isEqualTo(playerId);
+        assertThat(response.getServerId()).isEqualTo(serverId);
+    }
+
+    @Test
+    public void givenMissingServerId_whenSetStatus_thenThrowException() {
+        // GIVEN
+        ServerSetStatusRequest request = mock(ServerSetStatusRequest.class);
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.setStatus(request));
+    }
+
+    @Test
+    public void givenInvalidServerId_whenSetStatus_thenThrowException() {
+        // GIVEN
+        ServerSetStatusRequest request = mock(ServerSetStatusRequest.class);
+        when(request.getId()).thenReturn("testId");
+
+        // WHEN & THEN
+        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.setStatus(request));
+    }
+
+    @Test
+    public void givenValidServerId_whenSetStatus_thenSetStatus() throws ApiException {
+        // GIVEN
+        String serverId = "testId";
+        ServerStatus newStatus = ServerStatus.CLOSED;
+
+        ServerSetStatusRequest request = mock(ServerSetStatusRequest.class);
+        when(request.getId()).thenReturn(serverId);
+        when(request.getStatus()).thenReturn(newStatus);
+
+        GameServer gameServer = mock(GameServer.class);
+        when(gameServerRepository.findById(serverId)).thenReturn(Optional.of(gameServer));
+
+        // WHEN
+        matchmakingService.setStatus(request);
+
+        // THEN
+        verify(gameServer).setStatus(newStatus);
+        verify(gameServerRepository).save(gameServer);
+    }
+
+    @Test
+    public void givenValidServerId_whenSetStatus_thenReturnResponse() throws ApiException {
+        // GIVEN
+        String serverId = "testId";
+        ServerStatus newStatus = ServerStatus.CLOSED;
+
+        ServerSetStatusRequest request = mock(ServerSetStatusRequest.class);
+        when(request.getId()).thenReturn(serverId);
+        when(request.getStatus()).thenReturn(newStatus);
+
+        GameServer gameServer = mock(GameServer.class);
+        when(gameServerRepository.findById(serverId)).thenReturn(Optional.of(gameServer));
+
+        // WHEN
+        ServerSetStatusResponse response = matchmakingService.setStatus(request);
+
+        // THEN
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(serverId);
+        assertThat(response.getStatus()).isEqualTo(newStatus);
     }
 }
