@@ -60,7 +60,13 @@
 		<dependency>
 			<groupId>de.opengamebackend</groupId>
 			<artifactId>net</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
+			<version>0.0.5-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>de.opengamebackend</groupId>
+			<artifactId>test</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -99,16 +105,21 @@
 
 	<repositories>
 		<repository>
-			<id>github</id>
-			<name>GitHub Packages</name>
+			<id>github-net</id>
+			<name>GitHub Packages (net)</name>
 			<url>https://maven.pkg.github.com/open-game-backend/net</url>
-        </repository>
+		</repository>
+		<repository>
+			<id>github-test</id>
+			<name>GitHub Packages (test)</name>
+			<url>https://maven.pkg.github.com/open-game-backend/test</url>
+		</repository>
 	</repositories>
 
     <distributionManagement>
         <repository>
             <id>github</id>
-            <name>GitHub Packages</name>
+            <name>GitHub Packages (matchmaking)</name>
             <url>https://maven.pkg.github.com/open-game-backend/matchmaking</url>
         </repository>
     </distributionManagement>
