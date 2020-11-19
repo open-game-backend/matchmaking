@@ -58,6 +58,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>1.4.8</version>
+		</dependency>
+
+		<dependency>
 			<groupId>de.opengamebackend</groupId>
 			<artifactId>net</artifactId>
 			<version>0.0.6-SNAPSHOT</version>
@@ -101,6 +107,12 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 	</build>
 
 	<repositories>
