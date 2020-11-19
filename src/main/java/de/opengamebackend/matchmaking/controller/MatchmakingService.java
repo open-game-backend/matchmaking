@@ -10,6 +10,7 @@ import de.opengamebackend.matchmaking.model.repositories.GameServerRepository;
 import de.opengamebackend.matchmaking.model.repositories.PlayerRepository;
 import de.opengamebackend.matchmaking.model.requests.*;
 import de.opengamebackend.matchmaking.model.responses.*;
+import de.opengamebackend.net.ApiErrors;
 import de.opengamebackend.net.ApiException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,19 +80,19 @@ public class MatchmakingService {
     public ServerRegisterResponse register(@RequestBody ServerRegisterRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getGameMode())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_MODE);
+            throw new ApiException(ApiErrors.MISSING_GAME_MODE_CODE, ApiErrors.MISSING_GAME_MODE_MESSAGE);
         }
 
         if (Strings.isNullOrEmpty(request.getIpV4Address())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_IPV4_ADDRESS);
+            throw new ApiException(ApiErrors.MISSING_IPV4_ADDRESS_CODE, ApiErrors.MISSING_IPV4_ADDRESS_MESSAGE);
         }
 
         if (Strings.isNullOrEmpty(request.getRegion())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_REGION);
+            throw new ApiException(ApiErrors.MISSING_REGION_CODE, ApiErrors.MISSING_REGION_MESSAGE);
         }
 
         if (Strings.isNullOrEmpty(request.getVersion())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_VERSION);
+            throw new ApiException(ApiErrors.MISSING_VERSION_CODE, ApiErrors.MISSING_VERSION_MESSAGE);
         }
 
         // Check if already exists.
@@ -121,13 +122,13 @@ public class MatchmakingService {
     public ServerDeregisterResponse deregister(@RequestBody ServerDeregisterRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
+            throw new ApiException(ApiErrors.MISSING_GAME_SERVER_ID_CODE, ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
         }
 
         Optional<GameServer> gameServer = gameServerRepository.findById(request.getId());
 
         if (!gameServer.isPresent()) {
-            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
+            throw new ApiException(ApiErrors.GAME_SERVER_NOT_FOUND_CODE, ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
         }
 
         gameServerRepository.delete(gameServer.get());
@@ -138,13 +139,13 @@ public class MatchmakingService {
     public ServerSendHeartbeatResponse sendHeartbeat(@RequestBody ServerSendHeartbeatRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
+            throw new ApiException(ApiErrors.MISSING_GAME_SERVER_ID_CODE, ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getId());
 
         if (!optionalGameServer.isPresent()) {
-            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
+            throw new ApiException(ApiErrors.GAME_SERVER_NOT_FOUND_CODE, ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
         }
 
         GameServer gameServer = optionalGameServer.get();
@@ -157,19 +158,19 @@ public class MatchmakingService {
     public ClientEnqueueResponse enqueue(@RequestBody ClientEnqueueRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
+            throw new ApiException(ApiErrors.MISSING_PLAYER_ID_CODE, ApiErrors.MISSING_PLAYER_ID_MESSAGE);
         }
 
         if (Strings.isNullOrEmpty(request.getGameMode())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_MODE);
+            throw new ApiException(ApiErrors.MISSING_GAME_MODE_CODE, ApiErrors.MISSING_GAME_MODE_MESSAGE);
         }
 
         if (Strings.isNullOrEmpty(request.getRegion())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_REGION);
+            throw new ApiException(ApiErrors.MISSING_REGION_CODE, ApiErrors.MISSING_REGION_MESSAGE);
         }
 
         if (Strings.isNullOrEmpty(request.getVersion())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_VERSION);
+            throw new ApiException(ApiErrors.MISSING_VERSION_CODE, ApiErrors.MISSING_VERSION_MESSAGE);
         }
 
         // Check if already exists.
@@ -197,13 +198,13 @@ public class MatchmakingService {
     public ClientDequeueResponse dequeue(@RequestBody ClientDequeueRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
+            throw new ApiException(ApiErrors.MISSING_PLAYER_ID_CODE, ApiErrors.MISSING_PLAYER_ID_MESSAGE);
         }
 
         Optional<Player> player = playerRepository.findById(request.getPlayerId());
 
         if (!player.isPresent()) {
-            throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND);
+            throw new ApiException(ApiErrors.PLAYER_NOT_FOUND_CODE, ApiErrors.PLAYER_NOT_FOUND_MESSAGE);
         }
 
         playerRepository.delete(player.get());
@@ -214,13 +215,13 @@ public class MatchmakingService {
     public ClientPollMatchmakingResponse pollMatchmaking(@RequestBody ClientPollMatchmakingRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
+            throw new ApiException(ApiErrors.MISSING_PLAYER_ID_CODE, ApiErrors.MISSING_PLAYER_ID_MESSAGE);
         }
 
         Optional<Player> optionalPlayer = playerRepository.findById(request.getPlayerId());
 
         if (!optionalPlayer.isPresent()) {
-            throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND);
+            throw new ApiException(ApiErrors.PLAYER_NOT_FOUND_CODE, ApiErrors.PLAYER_NOT_FOUND_MESSAGE);
         }
 
         Player player = optionalPlayer.get();
@@ -303,17 +304,17 @@ public class MatchmakingService {
     public ServerNotifyPlayerJoinedResponse notifyPlayerJoined(@RequestBody ServerNotifyPlayerJoinedRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getServerId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
+            throw new ApiException(ApiErrors.MISSING_GAME_SERVER_ID_CODE, ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
         }
 
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
+            throw new ApiException(ApiErrors.MISSING_PLAYER_ID_CODE, ApiErrors.MISSING_PLAYER_ID_MESSAGE);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getServerId());
 
         if (!optionalGameServer.isPresent()) {
-            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
+            throw new ApiException(ApiErrors.GAME_SERVER_NOT_FOUND_CODE, ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
         }
 
         GameServer gameServer = optionalGameServer.get();
@@ -337,24 +338,24 @@ public class MatchmakingService {
         }
         else
         {
-            throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND_FOR_SERVER);
+            throw new ApiException(ApiErrors.PLAYER_NOT_FOUND_FOR_SERVER_CODE, ApiErrors.PLAYER_NOT_FOUND_FOR_SERVER_MESSAGE);
         }
     }
 
     public ServerNotifyPlayerLeftResponse notifyPlayerLeft(@RequestBody ServerNotifyPlayerLeftRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getServerId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
+            throw new ApiException(ApiErrors.MISSING_GAME_SERVER_ID_CODE, ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
         }
 
         if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_PLAYER_ID);
+            throw new ApiException(ApiErrors.MISSING_PLAYER_ID_CODE, ApiErrors.MISSING_PLAYER_ID_MESSAGE);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getServerId());
 
         if (!optionalGameServer.isPresent()) {
-            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
+            throw new ApiException(ApiErrors.GAME_SERVER_NOT_FOUND_CODE, ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
         }
 
         GameServer gameServer = optionalGameServer.get();
@@ -372,20 +373,20 @@ public class MatchmakingService {
         }
         else
         {
-            throw new ApiException(ApiErrors.ERROR_PLAYER_NOT_FOUND_FOR_SERVER);
+            throw new ApiException(ApiErrors.PLAYER_NOT_FOUND_FOR_SERVER_CODE, ApiErrors.PLAYER_NOT_FOUND_FOR_SERVER_MESSAGE);
         }
     }
 
     public ServerSetStatusResponse setStatus(@RequestBody ServerSetStatusRequest request)
             throws ApiException {
         if (Strings.isNullOrEmpty(request.getId())) {
-            throw new ApiException(ApiErrors.ERROR_MISSING_GAME_SERVER_ID);
+            throw new ApiException(ApiErrors.MISSING_GAME_SERVER_ID_CODE, ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getId());
 
         if (!optionalGameServer.isPresent()) {
-            throw new ApiException(ApiErrors.ERROR_GAME_SERVER_NOT_FOUND);
+            throw new ApiException(ApiErrors.GAME_SERVER_NOT_FOUND_CODE, ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
         }
 
         GameServer gameServer = optionalGameServer.get();
