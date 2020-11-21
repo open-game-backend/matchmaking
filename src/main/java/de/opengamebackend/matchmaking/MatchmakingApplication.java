@@ -1,5 +1,6 @@
 package de.opengamebackend.matchmaking;
 
+import de.opengamebackend.util.EnableOpenGameBackendUtils;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
 @SpringBootApplication
+@EnableOpenGameBackendUtils
 public class MatchmakingApplication {
 	@Bean
 	public ModelMapper modelMapper() {

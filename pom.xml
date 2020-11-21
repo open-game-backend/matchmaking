@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>de.opengamebackend</groupId>
 	<artifactId>matchmaking</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>matchmaking</name>
 	<description>Provides lists of available game servers, and allows players to connect to them.</description>
 
@@ -64,9 +64,26 @@
 		</dependency>
 
 		<dependency>
+			<groupId>co.elastic.logging</groupId>
+			<artifactId>logback-ecs-encoder</artifactId>
+			<version>0.5.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.zalando</groupId>
+			<artifactId>logbook-spring-boot-starter</artifactId>
+			<version>2.4.1</version>
+		</dependency>
+
+		<dependency>
 			<groupId>de.opengamebackend</groupId>
 			<artifactId>net</artifactId>
 			<version>0.0.6-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>de.opengamebackend</groupId>
+			<artifactId>util</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>de.opengamebackend</groupId>
@@ -120,6 +137,11 @@
 			<id>github-net</id>
 			<name>GitHub Packages (net)</name>
 			<url>https://maven.pkg.github.com/open-game-backend/net</url>
+		</repository>
+		<repository>
+			<id>github-util</id>
+			<name>GitHub Packages (util)</name>
+			<url>https://maven.pkg.github.com/open-game-backend/util</url>
 		</repository>
 		<repository>
 			<id>github-test</id>
