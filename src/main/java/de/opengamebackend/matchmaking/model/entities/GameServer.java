@@ -2,8 +2,10 @@ package de.opengamebackend.matchmaking.model.entities;
 
 import de.opengamebackend.matchmaking.model.ServerStatus;
 
-import javax.persistence.*;
-import java.time.LocalDateTime;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class GameServer {
     private String ipV4Address;
     private int port;
     private int maxPlayers;
-    private LocalDateTime lastHeartbeat;
+    private OffsetDateTime lastHeartbeat;
     private ServerStatus status;
 
     @OneToMany(mappedBy="gameServer")
@@ -56,7 +58,7 @@ public class GameServer {
         return maxPlayers;
     }
 
-    public LocalDateTime getLastHeartbeat() {
+    public OffsetDateTime getLastHeartbeat() {
         return lastHeartbeat;
     }
 
@@ -92,7 +94,7 @@ public class GameServer {
         this.maxPlayers = maxPlayers;
     }
 
-    public void setLastHeartbeat(LocalDateTime lastHeartbeat) {
+    public void setLastHeartbeat(OffsetDateTime lastHeartbeat) {
         this.lastHeartbeat = lastHeartbeat;
     }
 

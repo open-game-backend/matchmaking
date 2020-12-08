@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -111,7 +111,7 @@ public class MatchmakingService {
         }
 
         gameServer.getPlayers().clear();
-        gameServer.setLastHeartbeat(LocalDateTime.now());
+        gameServer.setLastHeartbeat(OffsetDateTime.now());
         gameServer.setStatus(ServerStatus.OPEN);
 
         gameServerRepository.save(gameServer);
@@ -149,7 +149,7 @@ public class MatchmakingService {
         }
 
         GameServer gameServer = optionalGameServer.get();
-        gameServer.setLastHeartbeat(LocalDateTime.now());
+        gameServer.setLastHeartbeat(OffsetDateTime.now());
         gameServerRepository.save(gameServer);
 
         return new ServerSendHeartbeatResponse(request.getId());
@@ -243,7 +243,7 @@ public class MatchmakingService {
         Stream<GameServer> allServersStream = StreamSupport.stream(allServers.spliterator(), false);
 
         Stream<GameServer> expiredServersStream = allServersStream.filter
-                (s -> s.getLastHeartbeat().plusSeconds(SERVER_HEARTBEAT_TIMEOUT_SECONDS).isBefore(LocalDateTime.now()));
+                (s -> s.getLastHeartbeat().plusSeconds(SERVER_HEARTBEAT_TIMEOUT_SECONDS).isBefore(OffsetDateTime.now()));
         List<GameServer> expiredServers = expiredServersStream.collect(Collectors.toList());
 
         gameServerRepository.deleteAll(expiredServers);
@@ -254,7 +254,7 @@ public class MatchmakingService {
 
         Stream<Player> expiredPlayersStream = allPlayersStream.filter
                 (p -> p.getStatus() == PlayerStatus.MATCHED &&
-                        p.getMatchedTime().plusSeconds(CLIENT_JOIN_TIMEOUT_SECONDS).isBefore(LocalDateTime.now()));
+                        p.getMatchedTime().plusSeconds(CLIENT_JOIN_TIMEOUT_SECONDS).isBefore(OffsetDateTime.now()));
         expiredPlayersStream.forEach(this::removePlayer);
 
         // Get open servers.
@@ -284,7 +284,7 @@ public class MatchmakingService {
         // Allocate player to server.
         player.setStatus(PlayerStatus.MATCHED);
         player.setGameServer(openServer);
-        player.setMatchedTime(LocalDateTime.now());
+        player.setMatchedTime(OffsetDateTime.now());
 
         openServer.getPlayers().add(player);
 
@@ -329,7 +329,7 @@ public class MatchmakingService {
             if (player.getStatus() != PlayerStatus.JOINED)
             {
                 player.setStatus(PlayerStatus.JOINED);
-                player.setJoinedTime(LocalDateTime.now());
+                player.setJoinedTime(OffsetDateTime.now());
 
                 playerRepository.save(player);
             }

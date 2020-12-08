@@ -5,7 +5,7 @@ import de.opengamebackend.matchmaking.model.PlayerStatus;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 public class Player {
@@ -19,8 +19,8 @@ public class Player {
 
     @ManyToOne
     private GameServer gameServer;
-    private LocalDateTime matchedTime;
-    private LocalDateTime joinedTime;
+    private OffsetDateTime matchedTime;
+    private OffsetDateTime joinedTime;
 
     public String getPlayerId() {
         return playerId;
@@ -70,19 +70,19 @@ public class Player {
         this.gameServer = gameServer;
     }
 
-    public LocalDateTime getMatchedTime() {
+    public OffsetDateTime getMatchedTime() {
         return matchedTime;
     }
 
-    public void setMatchedTime(LocalDateTime matchedTime) {
+    public void setMatchedTime(OffsetDateTime matchedTime) {
         this.matchedTime = matchedTime;
     }
 
-    public LocalDateTime getJoinedTime() {
+    public OffsetDateTime getJoinedTime() {
         return joinedTime;
     }
 
-    public void setJoinedTime(LocalDateTime joinedTime) {
+    public void setJoinedTime(OffsetDateTime joinedTime) {
         this.joinedTime = joinedTime;
     }
 }

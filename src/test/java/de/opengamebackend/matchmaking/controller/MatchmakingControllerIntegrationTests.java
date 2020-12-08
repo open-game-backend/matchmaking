@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -44,7 +44,7 @@ public class MatchmakingControllerIntegrationTests {
         this.gameServer.setId("testId");
         this.gameServer.setIpV4Address("1.2.3.4");
         this.gameServer.setPort(8888);
-        this.gameServer.setLastHeartbeat(LocalDateTime.now());
+        this.gameServer.setLastHeartbeat(OffsetDateTime.now());
         entityManager.persist(this.gameServer);
 
         this.player = new Player();

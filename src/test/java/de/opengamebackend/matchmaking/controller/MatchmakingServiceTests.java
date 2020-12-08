@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.modelmapper.ModelMapper;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,7 +57,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getVersion()).thenReturn("1.0");
         when(gameServer.getPort()).thenReturn(1234);
         when(gameServer.getMaxPlayers()).thenReturn(2);
-        when(gameServer.getLastHeartbeat()).thenReturn(LocalDateTime.now());
+        when(gameServer.getLastHeartbeat()).thenReturn(OffsetDateTime.now());
         when(gameServer.getStatus()).thenReturn(ServerStatus.OPEN);
         when(gameServer.getPlayers()).thenReturn(Lists.newArrayList(p1, p2));
 
@@ -496,7 +496,7 @@ public class MatchmakingServiceTests {
         when(playerRepository.findById(request.getPlayerId())).thenReturn(Optional.of(player));
 
         GameServer gameServer = mock(GameServer.class);
-        when(gameServer.getLastHeartbeat()).thenReturn(LocalDateTime.now().minusSeconds(MatchmakingService.SERVER_HEARTBEAT_TIMEOUT_SECONDS + 1));
+        when(gameServer.getLastHeartbeat()).thenReturn(OffsetDateTime.now().minusSeconds(MatchmakingService.SERVER_HEARTBEAT_TIMEOUT_SECONDS + 1));
         when(gameServerRepository.findAll()).thenReturn(Lists.newArrayList(gameServer));
 
         // WHEN
@@ -519,7 +519,7 @@ public class MatchmakingServiceTests {
 
         Player player = mock(Player.class);
         when(player.getStatus()).thenReturn(PlayerStatus.MATCHED);
-        when(player.getMatchedTime()).thenReturn(LocalDateTime.now().minusSeconds(MatchmakingService.CLIENT_JOIN_TIMEOUT_SECONDS + 1));
+        when(player.getMatchedTime()).thenReturn(OffsetDateTime.now().minusSeconds(MatchmakingService.CLIENT_JOIN_TIMEOUT_SECONDS + 1));
 
         when(playerRepository.findById(request.getPlayerId())).thenReturn(Optional.of(player));
         when(playerRepository.findAll()).thenReturn(Lists.newArrayList(player));
@@ -573,7 +573,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getGameMode()).thenReturn(gameMode);
         when(gameServer.getRegion()).thenReturn(region);
         when(gameServer.getVersion()).thenReturn(version);
-        when(gameServer.getLastHeartbeat()).thenReturn(LocalDateTime.now());
+        when(gameServer.getLastHeartbeat()).thenReturn(OffsetDateTime.now());
 
         when(gameServerRepository.findAll()).thenReturn(Lists.newArrayList(gameServer));
 
@@ -583,7 +583,7 @@ public class MatchmakingServiceTests {
         // THEN
         verify(player).setStatus(PlayerStatus.MATCHED);
         verify(player).setGameServer(gameServer);
-        verify(player).setMatchedTime(any(LocalDateTime.class));
+        verify(player).setMatchedTime(any(OffsetDateTime.class));
 
         assertThat(allocatedPlayers).containsExactly(player);
 
@@ -617,7 +617,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getGameMode()).thenReturn(gameMode);
         when(gameServer.getRegion()).thenReturn(region);
         when(gameServer.getVersion()).thenReturn(version);
-        when(gameServer.getLastHeartbeat()).thenReturn(LocalDateTime.now());
+        when(gameServer.getLastHeartbeat()).thenReturn(OffsetDateTime.now());
         when(gameServer.getIpV4Address()).thenReturn("127.0.0.1");
         when(gameServer.getPort()).thenReturn(1234);
 
@@ -702,7 +702,7 @@ public class MatchmakingServiceTests {
 
         // THEN
         verify(player).setStatus(PlayerStatus.JOINED);
-        verify(player).setJoinedTime(any(LocalDateTime.class));
+        verify(player).setJoinedTime(any(OffsetDateTime.class));
 
         verify(playerRepository).save(player);
     }
