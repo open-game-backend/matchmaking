@@ -9,6 +9,7 @@ import de.opengamebackend.matchmaking.model.repositories.GameServerRepository;
 import de.opengamebackend.matchmaking.model.repositories.PlayerRepository;
 import de.opengamebackend.matchmaking.model.requests.*;
 import de.opengamebackend.matchmaking.model.responses.*;
+import de.opengamebackend.net.ApiErrors;
 import de.opengamebackend.net.ApiException;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,7 +119,9 @@ public class MatchmakingServiceTests {
         ServerRegisterRequest request = new ServerRegisterRequest("1.0", "", "EU", "127.0.0.1", 1234, 2);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.register(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.register(request))
+                .withMessage(ApiErrors.MISSING_GAME_MODE_MESSAGE);
     }
 
     @Test
@@ -127,7 +130,9 @@ public class MatchmakingServiceTests {
         ServerRegisterRequest request = new ServerRegisterRequest("1.0", "GM", "EU", "", 1234, 2);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.register(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.register(request))
+                .withMessage(ApiErrors.MISSING_IPV4_ADDRESS_MESSAGE);
     }
 
     @Test
@@ -136,7 +141,9 @@ public class MatchmakingServiceTests {
         ServerRegisterRequest request = new ServerRegisterRequest("1.0", "GM", "", "127.0.0.1", 1234, 2);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.register(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.register(request))
+                .withMessage(ApiErrors.MISSING_REGION_MESSAGE);
     }
 
     @Test
@@ -145,7 +152,9 @@ public class MatchmakingServiceTests {
         ServerRegisterRequest request = new ServerRegisterRequest("", "GM", "EU", "127.0.0.1", 1234, 2);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.register(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.register(request))
+                .withMessage(ApiErrors.MISSING_VERSION_MESSAGE);
     }
 
     @Test
@@ -193,7 +202,9 @@ public class MatchmakingServiceTests {
         ServerDeregisterRequest request = mock(ServerDeregisterRequest.class);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.deregister(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.deregister(request))
+                .withMessage(ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
     }
 
     @Test
@@ -203,7 +214,9 @@ public class MatchmakingServiceTests {
         when(request.getId()).thenReturn("testId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.deregister(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.deregister(request))
+                .withMessage(ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
     }
 
     @Test
@@ -245,7 +258,9 @@ public class MatchmakingServiceTests {
         ServerSendHeartbeatRequest request = mock(ServerSendHeartbeatRequest.class);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.sendHeartbeat(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.sendHeartbeat(request))
+                .withMessage(ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
     }
 
     @Test
@@ -255,7 +270,9 @@ public class MatchmakingServiceTests {
         when(request.getId()).thenReturn("testId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.sendHeartbeat(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.sendHeartbeat(request))
+                .withMessage(ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
     }
 
     @Test
@@ -298,7 +315,9 @@ public class MatchmakingServiceTests {
         ClientEnqueueRequest request = new ClientEnqueueRequest("testId", "1.0", "", "EU");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.enqueue(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.enqueue(request))
+                .withMessage(ApiErrors.MISSING_GAME_MODE_MESSAGE);
     }
 
     @Test
@@ -307,7 +326,9 @@ public class MatchmakingServiceTests {
         ClientEnqueueRequest request = new ClientEnqueueRequest("", "1.0", "GM", "EU");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.enqueue(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.enqueue(request))
+                .withMessage(ApiErrors.MISSING_PLAYER_ID_MESSAGE);
     }
 
     @Test
@@ -316,7 +337,9 @@ public class MatchmakingServiceTests {
         ClientEnqueueRequest request = new ClientEnqueueRequest("testId", "1.0", "GM", "");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.enqueue(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.enqueue(request))
+                .withMessage(ApiErrors.MISSING_REGION_MESSAGE);
     }
 
     @Test
@@ -325,7 +348,9 @@ public class MatchmakingServiceTests {
         ClientEnqueueRequest request = new ClientEnqueueRequest("testId", "", "GM", "EU");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.enqueue(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.enqueue(request))
+                .withMessage(ApiErrors.MISSING_VERSION_MESSAGE);
     }
 
     @Test
@@ -394,7 +419,9 @@ public class MatchmakingServiceTests {
         ClientDequeueRequest request = mock(ClientDequeueRequest.class);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.dequeue(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.dequeue(request))
+                .withMessage(ApiErrors.MISSING_PLAYER_ID_MESSAGE);
     }
 
     @Test
@@ -404,7 +431,9 @@ public class MatchmakingServiceTests {
         when(request.getPlayerId()).thenReturn("testId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.dequeue(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.dequeue(request))
+                .withMessage(ApiErrors.PLAYER_NOT_FOUND_MESSAGE);
     }
 
     @Test
@@ -446,7 +475,9 @@ public class MatchmakingServiceTests {
         ClientPollMatchmakingRequest request = mock(ClientPollMatchmakingRequest.class);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.pollMatchmaking(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.pollMatchmaking(request))
+                .withMessage(ApiErrors.MISSING_PLAYER_ID_MESSAGE);
     }
 
     @Test
@@ -456,7 +487,9 @@ public class MatchmakingServiceTests {
         when(request.getPlayerId()).thenReturn("testId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.pollMatchmaking(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.pollMatchmaking(request))
+                .withMessage(ApiErrors.PLAYER_NOT_FOUND_MESSAGE);
     }
 
     @Test
@@ -640,7 +673,9 @@ public class MatchmakingServiceTests {
         ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerJoined(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.notifyPlayerJoined(request))
+                .withMessage(ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
     }
 
     @Test
@@ -650,7 +685,9 @@ public class MatchmakingServiceTests {
         when(request.getServerId()).thenReturn("testId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerJoined(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.notifyPlayerJoined(request))
+                .withMessage(ApiErrors.MISSING_PLAYER_ID_MESSAGE);
     }
 
     @Test
@@ -661,7 +698,9 @@ public class MatchmakingServiceTests {
         when(request.getPlayerId()).thenReturn("testPlayerId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerJoined(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.notifyPlayerJoined(request))
+                .withMessage(ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
     }
 
     @Test
@@ -675,7 +714,9 @@ public class MatchmakingServiceTests {
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerJoined(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.notifyPlayerJoined(request))
+                .withMessage(ApiErrors.PLAYER_NOT_FOUND_FOR_SERVER_MESSAGE);
     }
 
     @Test
@@ -741,7 +782,9 @@ public class MatchmakingServiceTests {
         ServerNotifyPlayerLeftRequest request = mock(ServerNotifyPlayerLeftRequest.class);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerLeft(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.notifyPlayerLeft(request))
+                .withMessage(ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
     }
 
     @Test
@@ -751,7 +794,9 @@ public class MatchmakingServiceTests {
         when(request.getServerId()).thenReturn("testId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerLeft(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.notifyPlayerLeft(request))
+                .withMessage(ApiErrors.MISSING_PLAYER_ID_MESSAGE);
     }
 
     @Test
@@ -762,7 +807,9 @@ public class MatchmakingServiceTests {
         when(request.getPlayerId()).thenReturn("testPlayerId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerLeft(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.notifyPlayerLeft(request))
+                .withMessage(ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
     }
 
     @Test
@@ -776,7 +823,9 @@ public class MatchmakingServiceTests {
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.notifyPlayerLeft(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.notifyPlayerLeft(request))
+                .withMessage(ApiErrors.PLAYER_NOT_FOUND_FOR_SERVER_MESSAGE);
     }
 
     @Test
@@ -844,7 +893,9 @@ public class MatchmakingServiceTests {
         ServerSetStatusRequest request = mock(ServerSetStatusRequest.class);
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.setStatus(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.setStatus(request))
+                .withMessage(ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
     }
 
     @Test
@@ -854,7 +905,9 @@ public class MatchmakingServiceTests {
         when(request.getId()).thenReturn("testId");
 
         // WHEN & THEN
-        assertThatExceptionOfType(ApiException.class).isThrownBy(() -> matchmakingService.setStatus(request));
+        assertThatExceptionOfType(ApiException.class)
+                .isThrownBy(() -> matchmakingService.setStatus(request))
+                .withMessage(ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE);
     }
 
     @Test
