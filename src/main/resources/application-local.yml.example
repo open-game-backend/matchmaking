@@ -1,0 +1,11 @@
+spring:
+  h2:
+    console:
+      enabled:
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone:
+  instance:
+    hostname:
