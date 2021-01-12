@@ -11,10 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class MatchmakingController {
@@ -124,9 +121,9 @@ public class MatchmakingController {
                             "Error " + ApiErrors.MISSING_VERSION_CODE + ": " + ApiErrors.MISSING_VERSION_MESSAGE,
                     content = { @Content })
     })
-    public ResponseEntity<ClientEnqueueResponse> enqueue(@RequestBody ClientEnqueueRequest request)
+    public ResponseEntity<ClientEnqueueResponse> enqueue(@RequestBody ClientEnqueueRequest request, @RequestHeader String playerId)
             throws ApiException {
-        ClientEnqueueResponse response = matchmakingService.enqueue(request);
+        ClientEnqueueResponse response = matchmakingService.enqueue(request, playerId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -146,9 +143,9 @@ public class MatchmakingController {
                             "Error " + ApiErrors.PLAYER_NOT_FOUND_CODE + ": " + ApiErrors.PLAYER_NOT_FOUND_MESSAGE,
                     content = { @Content })
     })
-    public ResponseEntity<ClientDequeueResponse> dequeue(@RequestBody ClientDequeueRequest request)
+    public ResponseEntity<ClientDequeueResponse> dequeue(@RequestHeader String playerId)
             throws ApiException {
-        ClientDequeueResponse response = matchmakingService.dequeue(request);
+        ClientDequeueResponse response = matchmakingService.dequeue(playerId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -168,9 +165,9 @@ public class MatchmakingController {
                             "Error " + ApiErrors.PLAYER_NOT_FOUND_CODE + ": " + ApiErrors.PLAYER_NOT_FOUND_MESSAGE,
                     content = { @Content })
     })
-    public ResponseEntity<ClientPollMatchmakingResponse> pollMatchmaking(@RequestBody ClientPollMatchmakingRequest request)
+    public ResponseEntity<ClientPollMatchmakingResponse> pollMatchmaking(@RequestHeader String playerId)
             throws ApiException {
-        ClientPollMatchmakingResponse response = matchmakingService.pollMatchmaking(request);
+        ClientPollMatchmakingResponse response = matchmakingService.pollMatchmaking(playerId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

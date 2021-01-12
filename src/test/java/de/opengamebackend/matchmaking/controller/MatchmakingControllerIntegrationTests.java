@@ -84,20 +84,18 @@ public class MatchmakingControllerIntegrationTests {
 
     @Test
     public void whenEnqueue_thenOk() throws Exception {
-        ClientEnqueueRequest request = new ClientEnqueueRequest("testId", "1.0", "GM", "EU");
-        httpRequestUtils.assertPostOk(mvc, "/client/enqueue", request, ClientEnqueueResponse.class);
+        ClientEnqueueRequest request = new ClientEnqueueRequest("1.0", "GM", "EU");
+        httpRequestUtils.assertPostOk(mvc, "/client/enqueue", request, ClientEnqueueResponse.class, "testId");
     }
 
     @Test
     public void givenPlayer_whenDequeue_thenOk() throws Exception {
-        ClientDequeueRequest request = new ClientDequeueRequest(player.getPlayerId());
-        httpRequestUtils.assertPostOk(mvc, "/client/dequeue", request, ClientDequeueResponse.class);
+        httpRequestUtils.assertPostOk(mvc, "/client/dequeue", null, ClientDequeueResponse.class, player.getPlayerId());
     }
 
     @Test
     public void givenPlayer_whenPollMatchmaking_thenOk() throws Exception {
-        ClientPollMatchmakingRequest request = new ClientPollMatchmakingRequest(player.getPlayerId());
-        httpRequestUtils.assertPostOk(mvc, "/client/pollMatchmaking", request, ClientPollMatchmakingResponse.class);
+        httpRequestUtils.assertPostOk(mvc, "/client/pollMatchmaking", null, ClientPollMatchmakingResponse.class, player.getPlayerId());
     }
 
     @Test
