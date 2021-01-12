@@ -4,6 +4,7 @@ import de.opengamebackend.matchmaking.model.requests.*;
 import de.opengamebackend.matchmaking.model.responses.*;
 import de.opengamebackend.net.ApiErrors;
 import de.opengamebackend.net.ApiException;
+import de.opengamebackend.net.HttpHeader;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -121,7 +122,8 @@ public class MatchmakingController {
                             "Error " + ApiErrors.MISSING_VERSION_CODE + ": " + ApiErrors.MISSING_VERSION_MESSAGE,
                     content = { @Content })
     })
-    public ResponseEntity<ClientEnqueueResponse> enqueue(@RequestBody ClientEnqueueRequest request, @RequestHeader String playerId)
+    public ResponseEntity<ClientEnqueueResponse> enqueue(@RequestBody ClientEnqueueRequest request,
+                                                         @RequestHeader(HttpHeader.PLAYER_ID) String playerId)
             throws ApiException {
         ClientEnqueueResponse response = matchmakingService.enqueue(request, playerId);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -143,7 +145,7 @@ public class MatchmakingController {
                             "Error " + ApiErrors.PLAYER_NOT_FOUND_CODE + ": " + ApiErrors.PLAYER_NOT_FOUND_MESSAGE,
                     content = { @Content })
     })
-    public ResponseEntity<ClientDequeueResponse> dequeue(@RequestHeader String playerId)
+    public ResponseEntity<ClientDequeueResponse> dequeue(@RequestHeader(HttpHeader.PLAYER_ID) String playerId)
             throws ApiException {
         ClientDequeueResponse response = matchmakingService.dequeue(playerId);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -165,7 +167,8 @@ public class MatchmakingController {
                             "Error " + ApiErrors.PLAYER_NOT_FOUND_CODE + ": " + ApiErrors.PLAYER_NOT_FOUND_MESSAGE,
                     content = { @Content })
     })
-    public ResponseEntity<ClientPollMatchmakingResponse> pollMatchmaking(@RequestHeader String playerId)
+    public ResponseEntity<ClientPollMatchmakingResponse> pollMatchmaking(
+            @RequestHeader(HttpHeader.PLAYER_ID) String playerId)
             throws ApiException {
         ClientPollMatchmakingResponse response = matchmakingService.pollMatchmaking(playerId);
         return new ResponseEntity<>(response, HttpStatus.OK);
