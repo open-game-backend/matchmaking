@@ -49,7 +49,7 @@ public class MatchmakingService {
             ArrayList<String> playerIds = new ArrayList<>();
 
             for (Player player : server.getPlayers()) {
-                playerIds.add(player.getPlayerId());
+                playerIds.add(player.getId());
             }
 
             responseServer.setPlayerIds(playerIds);
@@ -177,7 +177,7 @@ public class MatchmakingService {
 
         // Update data.
         modelMapper.map(request, player);
-        player.setPlayerId(playerId);
+        player.setId(playerId);
         player.setStatus(PlayerStatus.QUEUED);
 
         // Remove from any servers.
@@ -324,7 +324,7 @@ public class MatchmakingService {
 
         // Find player.
         Player player = gameServer.getPlayers().stream()
-                .filter(p -> p.getPlayerId().equals(request.getPlayerId()))
+                .filter(p -> p.getId().equals(request.getPlayerId()))
                 .findFirst().orElse(null);
 
         if (player != null)
@@ -365,7 +365,7 @@ public class MatchmakingService {
 
         // Find player.
         Player player = gameServer.getPlayers().stream()
-                .filter(p -> p.getPlayerId().equals(request.getPlayerId()))
+                .filter(p -> p.getId().equals(request.getPlayerId()))
                 .findFirst().orElse(null);
 
         if (player != null)

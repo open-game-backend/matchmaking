@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 @Entity
 public class Player {
     @Id
-    private String playerId;
+    private String id;
 
     private String version;
     private String gameMode;
@@ -22,12 +22,12 @@ public class Player {
     private OffsetDateTime matchedTime;
     private OffsetDateTime joinedTime;
 
-    public String getPlayerId() {
-        return playerId;
+    public String getId() {
+        return id;
     }
 
-    public void setPlayerId(String playerId) {
-        this.playerId = playerId;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getVersion() {

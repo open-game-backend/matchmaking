@@ -46,8 +46,8 @@ public class MatchmakingServiceTests {
         Player p1 = mock(Player.class);
         Player p2 = mock(Player.class);
 
-        when(p1.getPlayerId()).thenReturn("TestPlayer1");
-        when(p2.getPlayerId()).thenReturn("TestPlayer2");
+        when(p1.getId()).thenReturn("TestPlayer1");
+        when(p2.getId()).thenReturn("TestPlayer2");
 
         GameServer gameServer = mock(GameServer.class);
 
@@ -80,7 +80,7 @@ public class MatchmakingServiceTests {
         assertThat(response.getServers().get(0).getLastHeartbeat()).isEqualTo(gameServer.getLastHeartbeat());
         assertThat(response.getServers().get(0).getStatus()).isEqualTo(gameServer.getStatus());
         assertThat(response.getServers().get(0).getPlayerIds()).isNotNull();
-        assertThat(response.getServers().get(0).getPlayerIds()).containsExactly(p1.getPlayerId(), p2.getPlayerId());
+        assertThat(response.getServers().get(0).getPlayerIds()).containsExactly(p1.getId(), p2.getId());
     }
 
     @Test
@@ -90,7 +90,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getId()).thenReturn("testServerId");
 
         Player player = mock(Player.class);
-        when(player.getPlayerId()).thenReturn("testPlayerId");
+        when(player.getId()).thenReturn("testPlayerId");
         when(player.getGameMode()).thenReturn("GM");
         when(player.getRegion()).thenReturn("EU");
         when(player.getVersion()).thenReturn("1.0");
@@ -105,7 +105,7 @@ public class MatchmakingServiceTests {
         // THEN
         assertThat(response.getPlayers()).isNotNull();
         assertThat(response.getPlayers()).hasSize(1);
-        assertThat(response.getPlayers().get(0).getPlayerId()).isEqualTo(player.getPlayerId());
+        assertThat(response.getPlayers().get(0).getPlayerId()).isEqualTo(player.getId());
         assertThat(response.getPlayers().get(0).getGameMode()).isEqualTo(player.getGameMode());
         assertThat(response.getPlayers().get(0).getRegion()).isEqualTo(player.getRegion());
         assertThat(response.getPlayers().get(0).getVersion()).isEqualTo(player.getVersion());
@@ -368,7 +368,7 @@ public class MatchmakingServiceTests {
 
         Player player = argument.getValue();
 
-        assertThat(player.getPlayerId()).isEqualTo(playerId);
+        assertThat(player.getId()).isEqualTo(playerId);
         assertThat(player.getGameMode()).isEqualTo(request.getGameMode());
         assertThat(player.getRegion()).isEqualTo(request.getRegion());
         assertThat(player.getVersion()).isEqualTo(request.getVersion());
@@ -720,7 +720,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getPlayers()).thenReturn(waitingPlayers);
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
 
-        when(player.getPlayerId()).thenReturn(playerId);
+        when(player.getId()).thenReturn(playerId);
 
         // WHEN
         matchmakingService.notifyPlayerJoined(request);
@@ -749,7 +749,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getPlayers()).thenReturn(waitingPlayers);
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
 
-        when(player.getPlayerId()).thenReturn(playerId);
+        when(player.getId()).thenReturn(playerId);
 
         // WHEN
         ServerNotifyPlayerJoinedResponse response = matchmakingService.notifyPlayerJoined(request);
@@ -829,7 +829,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getPlayers()).thenReturn(activePlayers);
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
 
-        when(player.getPlayerId()).thenReturn(playerId);
+        when(player.getId()).thenReturn(playerId);
         when(player.getGameServer()).thenReturn(gameServer);
 
         // WHEN
@@ -859,7 +859,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getPlayers()).thenReturn(activePlayers);
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
 
-        when(player.getPlayerId()).thenReturn(playerId);
+        when(player.getId()).thenReturn(playerId);
         when(player.getGameServer()).thenReturn(gameServer);
 
         // WHEN

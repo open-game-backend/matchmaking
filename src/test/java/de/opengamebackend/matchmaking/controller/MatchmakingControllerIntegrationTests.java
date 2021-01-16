@@ -48,7 +48,7 @@ public class MatchmakingControllerIntegrationTests {
         entityManager.persist(this.gameServer);
 
         this.player = new Player();
-        this.player.setPlayerId("awesomePlayer");
+        this.player.setId("awesomePlayer");
         entityManager.persist(player);
 
         entityManager.flush();
@@ -90,12 +90,12 @@ public class MatchmakingControllerIntegrationTests {
 
     @Test
     public void givenPlayer_whenDequeue_thenOk() throws Exception {
-        httpRequestUtils.assertPostOk(mvc, "/client/dequeue", null, ClientDequeueResponse.class, player.getPlayerId());
+        httpRequestUtils.assertPostOk(mvc, "/client/dequeue", null, ClientDequeueResponse.class, player.getId());
     }
 
     @Test
     public void givenPlayer_whenPollMatchmaking_thenOk() throws Exception {
-        httpRequestUtils.assertPostOk(mvc, "/client/pollMatchmaking", null, ClientPollMatchmakingResponse.class, player.getPlayerId());
+        httpRequestUtils.assertPostOk(mvc, "/client/pollMatchmaking", null, ClientPollMatchmakingResponse.class, player.getId());
     }
 
     @Test
@@ -103,7 +103,7 @@ public class MatchmakingControllerIntegrationTests {
         gameServer.getPlayers().add(player);
         entityManager.persistAndFlush(gameServer);
 
-        ServerNotifyPlayerJoinedRequest request = new ServerNotifyPlayerJoinedRequest(gameServer.getId(), player.getPlayerId());
+        ServerNotifyPlayerJoinedRequest request = new ServerNotifyPlayerJoinedRequest(gameServer.getId(), player.getId());
         httpRequestUtils.assertPostOk(mvc, "/server/notifyPlayerJoined", request, ServerNotifyPlayerJoinedResponse.class);
     }
 
@@ -112,7 +112,7 @@ public class MatchmakingControllerIntegrationTests {
         gameServer.getPlayers().add(player);
         entityManager.persistAndFlush(gameServer);
 
-        ServerNotifyPlayerLeftRequest request = new ServerNotifyPlayerLeftRequest(gameServer.getId(), player.getPlayerId());
+        ServerNotifyPlayerLeftRequest request = new ServerNotifyPlayerLeftRequest(gameServer.getId(), player.getId());
         httpRequestUtils.assertPostOk(mvc, "/server/notifyPlayerLeft", request, ServerNotifyPlayerLeftResponse.class);
     }
 
