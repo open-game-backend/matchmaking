@@ -1,5 +1,6 @@
 package de.opengamebackend.matchmaking.controller;
 
+import de.opengamebackend.matchmaking.model.PlayerStatus;
 import de.opengamebackend.matchmaking.model.ServerStatus;
 import de.opengamebackend.matchmaking.model.entities.GameServer;
 import de.opengamebackend.matchmaking.model.entities.Player;
@@ -42,13 +43,21 @@ public class MatchmakingControllerIntegrationTests {
     public void beforeEach() {
         this.gameServer = new GameServer();
         this.gameServer.setId("testId");
+        this.gameServer.setVersion("1.0");
+        this.gameServer.setGameMode("testGameMode");
+        this.gameServer.setRegion("testRegion");
         this.gameServer.setIpV4Address("1.2.3.4");
         this.gameServer.setPort(8888);
         this.gameServer.setLastHeartbeat(OffsetDateTime.now());
+        this.gameServer.setStatus(ServerStatus.OPEN);
         entityManager.persist(this.gameServer);
 
         this.player = new Player();
         this.player.setId("awesomePlayer");
+        this.player.setVersion("1.0");
+        this.player.setGameMode("testGameMode");
+        this.player.setRegion("testRegion");
+        this.player.setStatus(PlayerStatus.QUEUED);
         entityManager.persist(player);
 
         entityManager.flush();

@@ -2,25 +2,36 @@ package de.opengamebackend.matchmaking.model.entities;
 
 import de.opengamebackend.matchmaking.model.ServerStatus;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "matchmaking_gameserver")
 public class GameServer {
     @Id
     private String id;
 
+    @Column(nullable = false)
     private String version;
+
+    @Column(nullable = false)
     private String gameMode;
+
+    @Column(nullable = false)
     private String region;
+
+    @Column(nullable = false)
     private String ipV4Address;
+
     private int port;
     private int maxPlayers;
+
+    @Column(nullable = false)
     private OffsetDateTime lastHeartbeat;
+
+    @Column(nullable = false)
     private ServerStatus status;
 
     @OneToMany(mappedBy="gameServer")

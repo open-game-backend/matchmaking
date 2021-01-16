@@ -2,23 +2,30 @@ package de.opengamebackend.matchmaking.model.entities;
 
 import de.opengamebackend.matchmaking.model.PlayerStatus;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
+@Table(name = "matchmaking_player")
 public class Player {
     @Id
     private String id;
 
+    @Column(nullable = false)
     private String version;
+
+    @Column(nullable = false)
     private String gameMode;
+
+    @Column(nullable = false)
     private String region;
+
+    @Column(nullable = false)
     private PlayerStatus status;
 
     @ManyToOne
     private GameServer gameServer;
+
     private OffsetDateTime matchedTime;
     private OffsetDateTime joinedTime;
 
