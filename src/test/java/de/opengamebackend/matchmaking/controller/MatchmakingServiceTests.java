@@ -184,6 +184,31 @@ public class MatchmakingServiceTests {
     }
 
     @Test
+    public void givenExistingServer_whenRegister_thenServerIsUpdated() throws ApiException {
+        // GIVEN
+        ServerRegisterRequest request = new ServerRegisterRequest("1.0", "newGameMode", "EU", "127.0.0.1", 1234, 2);
+
+        GameServer existingServer = mock(GameServer.class);
+        when(existingServer.getIpV4Address()).thenReturn(request.getIpV4Address());
+        when(existingServer.getPort()).thenReturn(request.getPort());
+        when(existingServer.getGameMode()).thenReturn("oldGameMode");
+        when(gameServerRepository.findAll()).thenReturn(Lists.list(existingServer));
+
+        // WHEN
+        matchmakingService.register(request);
+
+        // THEN
+        verify(existingServer).setGameMode(request.getGameMode());
+        verify(existingServer).setLastHeartbeat(any());
+        verify(existingServer).setMaxPlayers(request.getMaxPlayers());
+        verify(existingServer).setRegion(request.getRegion());
+        verify(existingServer).setStatus(ServerStatus.OPEN);
+        verify(existingServer).setVersion(request.getVersion());
+
+        verify(gameServerRepository).save(existingServer);
+    }
+
+    @Test
     public void givenServer_whenRegister_thenIdIsReturned() throws ApiException {
         // GIVEN
         ServerRegisterRequest request = new ServerRegisterRequest("1.0", "GM", "EU", "127.0.0.1", 1234, 2);

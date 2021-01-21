@@ -16,6 +16,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nonnull;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -399,11 +400,7 @@ public class MatchmakingService {
         return new ServerSetStatusResponse(request.getId(), request.getStatus());
     }
 
-    private void removePlayer(Player player) {
-        if (player == null) {
-            return;
-        }
-
+    private void removePlayer(@Nonnull Player player) {
         if (player.getGameServer() != null) {
             player.getGameServer().getPlayers().remove(player);
             gameServerRepository.save(player.getGameServer());
