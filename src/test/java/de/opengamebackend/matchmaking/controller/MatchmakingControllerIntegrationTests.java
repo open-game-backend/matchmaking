@@ -65,12 +65,12 @@ public class MatchmakingControllerIntegrationTests {
 
     @Test
     public void whenGetServers_thenOk() throws Exception {
-        httpRequestUtils.assertGetOk(mvc, "/servers", GetServersResponse.class);
+        httpRequestUtils.assertGetOk(mvc, "/client/servers", GetServersResponse.class);
     }
 
     @Test
     public void whenGetQueue_thenOk() throws Exception {
-        httpRequestUtils.assertGetOk(mvc, "/queue", GetQueueResponse.class);
+        httpRequestUtils.assertGetOk(mvc, "/admin/queue", GetQueueResponse.class);
     }
 
     @Test

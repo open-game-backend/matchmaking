@@ -22,14 +22,14 @@ public class MatchmakingController {
         this.matchmakingService = matchmakingService;
     }
 
-    @GetMapping("/servers")
+    @GetMapping("/client/servers")
     @Operation(summary = "Gets all game servers that are currently available for matchmaking.")
     public ResponseEntity<GetServersResponse> getServers() {
         GetServersResponse response = matchmakingService.getServers();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/queue")
+    @GetMapping("/admin/queue")
     @Operation(summary = "Gets all players that are currently queued for matchmaking.")
     public ResponseEntity<GetQueueResponse> getQueue() {
         GetQueueResponse response = matchmakingService.getQueue();
