@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
+import javax.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Service
+@Transactional
 public class MatchmakingService {
     public static final long SERVER_HEARTBEAT_TIMEOUT_SECONDS = 120;
     public static final long CLIENT_JOIN_TIMEOUT_SECONDS = 120;
