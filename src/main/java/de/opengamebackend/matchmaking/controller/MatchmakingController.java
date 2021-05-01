@@ -188,7 +188,7 @@ public class MatchmakingController {
                     description =
                             "Error " + ApiErrors.MISSING_GAME_SERVER_ID_CODE + ": " + ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE + "<br />" +
                             "Error " + ApiErrors.GAME_SERVER_NOT_FOUND_CODE + ": " + ApiErrors.GAME_SERVER_NOT_FOUND_MESSAGE  + "<br />" +
-                            "Error " + ApiErrors.MISSING_PLAYER_ID_CODE + ": " + ApiErrors.MISSING_PLAYER_ID_MESSAGE + "<br />" +
+                            "Error " + ApiErrors.MISSING_TICKET_CODE + ": " + ApiErrors.MISSING_TICKET_MESSAGE + "<br />" +
                             "Error " + ApiErrors.PLAYER_NOT_FOUND_FOR_SERVER_CODE + ": " + ApiErrors.PLAYER_NOT_FOUND_FOR_SERVER_MESSAGE,
                     content = { @Content })
     })

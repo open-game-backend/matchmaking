@@ -516,6 +516,7 @@ public class MatchmakingServiceTests {
 
         Player player = mock(Player.class);
         when(player.getGameServer()).thenReturn(gameServer);
+        when(player.getTicket()).thenReturn("testTicket");
 
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
 
@@ -524,7 +525,7 @@ public class MatchmakingServiceTests {
 
         // THEN
         assertThat(response).isNotNull();
-        assertThat(response.getPlayerId()).isEqualTo(playerId);
+        assertThat(response.getTicket()).isEqualTo(player.getTicket());
         assertThat(response.getServerId()).isEqualTo(gameServer.getId());
         assertThat(response.getIpV4Address()).isEqualTo(gameServer.getIpV4Address());
         assertThat(response.getPort()).isEqualTo(gameServer.getPort());
@@ -587,7 +588,6 @@ public class MatchmakingServiceTests {
 
         // THEN
         assertThat(response).isNotNull();
-        assertThat(response.getPlayerId()).isEqualTo(playerId);
         assertThat(response.getStatus()).isEqualTo(MatchmakingStatus.SERVERS_FULL);
     }
 
@@ -623,6 +623,7 @@ public class MatchmakingServiceTests {
         matchmakingService.pollMatchmaking(playerId);
 
         // THEN
+        verify(player).setTicket(anyString());
         verify(player).setStatus(PlayerStatus.MATCHED);
         verify(player).setGameServer(gameServer);
         verify(player).setMatchedTime(any(OffsetDateTime.class));
@@ -669,7 +670,6 @@ public class MatchmakingServiceTests {
 
         // THEN
         assertThat(response).isNotNull();
-        assertThat(response.getPlayerId()).isEqualTo(playerId);
         assertThat(response.getServerId()).isEqualTo(gameServer.getId());
         assertThat(response.getIpV4Address()).isEqualTo(gameServer.getIpV4Address());
         assertThat(response.getPort()).isEqualTo(gameServer.getPort());
@@ -688,7 +688,7 @@ public class MatchmakingServiceTests {
     }
 
     @Test
-    public void givenMissingPlayerId_whenNotifyPlayerJoined_thenThrowException() {
+    public void givenMissingTicket_whenNotifyPlayerJoined_thenThrowException() {
         // GIVEN
         ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
         when(request.getServerId()).thenReturn("testId");
@@ -696,7 +696,7 @@ public class MatchmakingServiceTests {
         // WHEN & THEN
         assertThatExceptionOfType(ApiException.class)
                 .isThrownBy(() -> matchmakingService.notifyPlayerJoined(request))
-                .withMessage(ApiErrors.MISSING_PLAYER_ID_MESSAGE);
+                .withMessage(ApiErrors.MISSING_TICKET_MESSAGE);
     }
 
     @Test
@@ -704,7 +704,7 @@ public class MatchmakingServiceTests {
         // GIVEN
         ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
         when(request.getServerId()).thenReturn("testServerId");
-        when(request.getPlayerId()).thenReturn("testPlayerId");
+        when(request.getTicket()).thenReturn("testTicket");
 
         // WHEN & THEN
         assertThatExceptionOfType(ApiException.class)
@@ -717,7 +717,7 @@ public class MatchmakingServiceTests {
         // GIVEN
         ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
         when(request.getServerId()).thenReturn("testServerId");
-        when(request.getPlayerId()).thenReturn("testPlayerId");
+        when(request.getTicket()).thenReturn("testTicket");
 
         GameServer gameServer = mock(GameServer.class);
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
@@ -731,11 +731,11 @@ public class MatchmakingServiceTests {
     @Test
     public void givenValidPlayerAndServer_whenNotifyPlayerJoined_thenSetPlayerStatus() throws ApiException {
         // GIVEN
-        String playerId = "testPlayerId";
+        String ticket = "testTicket";
         String serverId = "testServerId";
 
         ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
-        when(request.getPlayerId()).thenReturn(playerId);
+        when(request.getTicket()).thenReturn(ticket);
         when(request.getServerId()).thenReturn(serverId);
 
         GameServer gameServer = mock(GameServer.class);
@@ -745,7 +745,7 @@ public class MatchmakingServiceTests {
         when(gameServer.getPlayers()).thenReturn(waitingPlayers);
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
 
-        when(player.getId()).thenReturn(playerId);
+        when(player.getTicket()).thenReturn(ticket);
 
         // WHEN
         matchmakingService.notifyPlayerJoined(request);
@@ -760,11 +760,11 @@ public class MatchmakingServiceTests {
     @Test
     public void givenValidPlayerAndServer_whenNotifyPlayerJoined_thenReturnResponse() throws ApiException {
         // GIVEN
-        String playerId = "testPlayerId";
+        String ticket = "testTicket";
         String serverId = "testServerId";
 
         ServerNotifyPlayerJoinedRequest request = mock(ServerNotifyPlayerJoinedRequest.class);
-        when(request.getPlayerId()).thenReturn(playerId);
+        when(request.getTicket()).thenReturn(ticket);
         when(request.getServerId()).thenReturn(serverId);
 
         GameServer gameServer = mock(GameServer.class);
@@ -774,14 +774,15 @@ public class MatchmakingServiceTests {
         when(gameServer.getPlayers()).thenReturn(waitingPlayers);
         when(gameServerRepository.findById(request.getServerId())).thenReturn(Optional.of(gameServer));
 
-        when(player.getId()).thenReturn(playerId);
+        when(player.getId()).thenReturn("testPlayer");
+        when(player.getTicket()).thenReturn(ticket);
 
         // WHEN
         ServerNotifyPlayerJoinedResponse response = matchmakingService.notifyPlayerJoined(request);
 
         // THEN
         assertThat(response).isNotNull();
-        assertThat(response.getPlayerId()).isEqualTo(playerId);
+        assertThat(response.getPlayerId()).isEqualTo(player.getId());
         assertThat(response.getServerId()).isEqualTo(serverId);
     }
 

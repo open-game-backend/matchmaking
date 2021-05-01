@@ -26,6 +26,7 @@ public class Player {
     @ManyToOne
     private GameServer gameServer;
 
+    private String ticket;
     private OffsetDateTime matchedTime;
     private OffsetDateTime joinedTime;
 
@@ -75,6 +76,14 @@ public class Player {
 
     public void setGameServer(GameServer gameServer) {
         this.gameServer = gameServer;
+    }
+
+    public String getTicket() {
+        return ticket;
+    }
+
+    public void setTicket(String ticket) {
+        this.ticket = ticket;
     }
 
     public OffsetDateTime getMatchedTime() {

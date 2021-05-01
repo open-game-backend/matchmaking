@@ -5,6 +5,7 @@ CREATE TABLE matchmaking_player (
     region VARCHAR(100) NOT NULL,
     status VARCHAR(100) NOT NULL,
     game_server_id VARCHAR(100) NULL,
+    ticket VARCHAR(100) NULL,
     matched_time TIMESTAMP NULL,
     joined_time TIMESTAMP NULL,
 

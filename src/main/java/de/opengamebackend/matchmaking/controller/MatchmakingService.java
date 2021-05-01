@@ -233,7 +233,7 @@ public class MatchmakingService {
         // Check if already matched.
         if (gameServer != null) {
             ClientPollMatchmakingResponse response = new ClientPollMatchmakingResponse();
-            response.setPlayerId(playerId);
+            response.setTicket(player.getTicket());
             response.setServerId(gameServer.getId());
             response.setIpV4Address(gameServer.getIpV4Address());
             response.setPort(gameServer.getPort());
@@ -280,7 +280,6 @@ public class MatchmakingService {
 
         if (openServer == null) {
             ClientPollMatchmakingResponse response = new ClientPollMatchmakingResponse();
-            response.setPlayerId(playerId);
             response.setStatus(MatchmakingStatus.SERVERS_FULL);
 
             return response;
@@ -288,6 +287,7 @@ public class MatchmakingService {
 
         // Allocate player to server.
         player.setStatus(PlayerStatus.MATCHED);
+        player.setTicket(UUID.randomUUID().toString());
         player.setGameServer(openServer);
         player.setMatchedTime(OffsetDateTime.now());
 
@@ -298,7 +298,7 @@ public class MatchmakingService {
 
         // Send response.
         ClientPollMatchmakingResponse response = new ClientPollMatchmakingResponse();
-        response.setPlayerId(playerId);
+        response.setTicket(player.getTicket());
         response.setServerId(openServer.getId());
         response.setIpV4Address(openServer.getIpV4Address());
         response.setPort(openServer.getPort());
@@ -313,8 +313,8 @@ public class MatchmakingService {
             throw new ApiException(ApiErrors.MISSING_GAME_SERVER_ID_CODE, ApiErrors.MISSING_GAME_SERVER_ID_MESSAGE);
         }
 
-        if (Strings.isNullOrEmpty(request.getPlayerId())) {
-            throw new ApiException(ApiErrors.MISSING_PLAYER_ID_CODE, ApiErrors.MISSING_PLAYER_ID_MESSAGE);
+        if (Strings.isNullOrEmpty(request.getTicket())) {
+            throw new ApiException(ApiErrors.MISSING_TICKET_CODE, ApiErrors.MISSING_TICKET_MESSAGE);
         }
 
         Optional<GameServer> optionalGameServer = gameServerRepository.findById(request.getServerId());
@@ -327,7 +327,7 @@ public class MatchmakingService {
 
         // Find player.
         Player player = gameServer.getPlayers().stream()
-                .filter(p -> p.getId().equals(request.getPlayerId()))
+                .filter(p -> p.getTicket().equals(request.getTicket()))
                 .findFirst().orElse(null);
 
         if (player != null)
@@ -340,7 +340,7 @@ public class MatchmakingService {
                 playerRepository.save(player);
             }
 
-            return new ServerNotifyPlayerJoinedResponse(request.getServerId(), request.getPlayerId());
+            return new ServerNotifyPlayerJoinedResponse(request.getServerId(), player.getId());
         }
         else
         {
