@@ -58,6 +58,7 @@ public class MatchmakingControllerIntegrationTests {
         this.player.setGameMode("testGameMode");
         this.player.setRegion("testRegion");
         this.player.setStatus(PlayerStatus.QUEUED);
+        this.player.setTicket("testTicket");
         entityManager.persist(player);
 
         entityManager.flush();
@@ -112,7 +113,7 @@ public class MatchmakingControllerIntegrationTests {
         gameServer.getPlayers().add(player);
         entityManager.persistAndFlush(gameServer);
 
-        ServerNotifyPlayerJoinedRequest request = new ServerNotifyPlayerJoinedRequest(gameServer.getId(), player.getId());
+        ServerNotifyPlayerJoinedRequest request = new ServerNotifyPlayerJoinedRequest(gameServer.getId(), player.getTicket());
         httpRequestUtils.assertPostOk(mvc, "/server/notifyPlayerJoined", request, ServerNotifyPlayerJoinedResponse.class);
     }
 
