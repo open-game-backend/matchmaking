@@ -9,5 +9,6 @@ CREATE TABLE matchmaking_gameserver (
     last_heartbeat TIMESTAMP NOT NULL,
     status VARCHAR(100) NOT NULL,
 
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT matchmaking_gameserver_unique UNIQUE (ipv4address, port)
 );
